@@ -1,4 +1,4 @@
-package org.abdrafikov.groupbuy.model.choises;
+package org.abdrafikov.groupbuy.model.choices;
 
 public enum GlobalRoleName {
     ROLE_USER,

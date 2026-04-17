@@ -3,7 +3,7 @@ package org.abdrafikov.groupbuy.service;
 import org.abdrafikov.groupbuy.dto.RegisterRequest;
 import org.abdrafikov.groupbuy.model.Role;
 import org.abdrafikov.groupbuy.model.User;
-import org.abdrafikov.groupbuy.model.choises.GlobalRoleName;
+import org.abdrafikov.groupbuy.model.choices.GlobalRoleName;
 import org.abdrafikov.groupbuy.repository.RoleRepository;
 import org.abdrafikov.groupbuy.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;

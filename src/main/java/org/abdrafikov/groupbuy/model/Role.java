@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.abdrafikov.groupbuy.model.base.BaseEntity;
-import org.abdrafikov.groupbuy.model.choises.GlobalRoleName;
+import org.abdrafikov.groupbuy.model.choices.GlobalRoleName;
 
 import java.util.HashSet;
 import java.util.Set;
