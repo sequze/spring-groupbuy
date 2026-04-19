@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Профиль</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="shell">
+    <header class="topbar">
+        <a class="brand" th:href="@{/workspaces}">
+            <span class="brand-mark">GB</span>
+            <span>GroupBuy</span>
+        </a>
+        <nav class="nav">
+            <a class="nav-link" th:href="@{/workspaces}">Workspaces</a>
+            <a class="nav-link" th:href="@{/profile}">Профиль</a>
+        </nav>
+    </header>
+
+    <main class="page-shell">
+        <section class="hero-card">
+            <div class="eyebrow">Аккаунт</div>
+            <h1 class="page-title">Профиль пользователя</h1>
+            <p class="page-copy">Здесь собраны основные данные текущего пользователя, используемые внутри рабочих пространств и закупок.</p>
+        </section>
+
+        <section class="panel">
+            <div class="profile-grid">
+                <dl class="profile-card">
+                    <dt>ID</dt>
+                    <dd th:text="${userId}"></dd>
+                </dl>
+                <dl class="profile-card">
+                    <dt>Email</dt>
+                    <dd th:text="${email}"></dd>
+                </dl>
+                <dl class="profile-card">
+                    <dt>Имя</dt>
+                    <dd th:text="${displayName}"></dd>
+                </dl>
+            </div>
+
+            <div class="page-actions">
+                <a class="button" th:href="@{/workspaces}">К рабочим пространствам</a>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

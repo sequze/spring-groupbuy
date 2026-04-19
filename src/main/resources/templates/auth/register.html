@@ -2,34 +2,51 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Регистрация</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-<h1>Регистрация</h1>
+<main class="auth-shell">
+    <section class="auth-card">
+        <div class="auth-visual">
+            <div class="eyebrow">Новый аккаунт</div>
+            <h1 class="auth-title">Создайте пространство для совместных закупок.</h1>
+            <p class="auth-copy">Зарегистрируйтесь, чтобы вести заказы централизованно, а не терять решения в чате.</p>
+        </div>
+        <div class="auth-panel">
+            <div class="eyebrow">Регистрация</div>
+            <h2 class="page-title">Новый пользователь</h2>
+            <p class="page-copy">Заполните базовые данные. После регистрации можно сразу создать первый workspace.</p>
 
-<form th:action="@{/auth/register}" th:object="${registerRequest}" method="post">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-    <div>
-        <label>Email</label>
-        <input type="email" th:field="*{email}">
-        <div th:errors="*{email}"></div>
-    </div>
+            <form th:action="@{/auth/register}" th:object="${registerRequest}" method="post" class="panel" style="padding:24px; margin-top:20px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
-    <div>
-        <label>Имя</label>
-        <input type="text" th:field="*{displayName}">
-        <div th:errors="*{displayName}"></div>
-    </div>
+                <div class="field-full">
+                    <label for="email">Email</label>
+                    <input id="email" type="email" th:field="*{email}" placeholder="name@company.com">
+                    <div class="error-text" th:errors="*{email}"></div>
+                </div>
 
-    <div>
-        <label>Пароль</label>
-        <input type="password" th:field="*{password}">
-        <div th:errors="*{password}"></div>
-    </div>
+                <div class="field-full">
+                    <label for="displayName">Имя</label>
+                    <input id="displayName" type="text" th:field="*{displayName}" placeholder="Например, Амир">
+                    <div class="error-text" th:errors="*{displayName}"></div>
+                </div>
 
-    <button type="submit">Зарегистрироваться</button>
-</form>
+                <div class="field-full">
+                    <label for="password">Пароль</label>
+                    <input id="password" type="password" th:field="*{password}" placeholder="Минимум 6 символов">
+                    <div class="error-text" th:errors="*{password}"></div>
+                </div>
 
-<a th:href="@{/auth/login}">Назад ко входу</a>
+                <div class="page-actions">
+                    <button class="button" type="submit">Создать аккаунт</button>
+                    <a class="button-secondary" th:href="@{/auth/login}">Назад ко входу</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
 </body>
 </html>

@@ -36,6 +36,15 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
+    public List<CommentDto> getByPurchaseItem(Long purchaseItemId) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        purchaseItemService.getAccessibleItem(purchaseItemId, currentUserId);
+        return commentRepository.findByPurchaseItemIdOrderByCreatedAtDesc(purchaseItemId).stream()
+                .map(comment -> toDto(comment, currentUserId))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public CommentDto getById(Long id) {
         Long currentUserId = currentUserService.getCurrentUserId();
         Comment comment = getAccessibleComment(id, currentUserId);

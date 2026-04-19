@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${purchaseItem.title}">Позиция закупки</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="shell">
+    <header class="topbar">
+        <a class="brand" th:href="@{/workspaces}">
+            <span class="brand-mark">GB</span>
+            <span>GroupBuy</span>
+        </a>
+        <nav class="nav">
+            <a class="nav-link" th:href="@{/purchase-items(workspaceId=${purchaseItem.workspaceId})}">Позиции</a>
+            <a class="nav-link" th:href="@{/orders(workspaceId=${purchaseItem.workspaceId})}">Заказы</a>
+            <a class="nav-link" th:href="@{/workspaces}">Workspaces</a>
+        </nav>
+    </header>
+
+    <main class="page-shell">
+        <section class="hero-card">
+            <div class="eyebrow">Позиция закупки</div>
+            <h1 class="page-title" th:text="${purchaseItem.title}">Позиция</h1>
+            <p class="page-copy" th:if="${purchaseItem.description}" th:text="${purchaseItem.description}"></p>
+            <div class="badge-row">
+                <span class="badge" th:text="'ID ' + ${purchaseItem.id}"></span>
+                <span class="badge badge-accent" th:text="${purchaseItem.status}"></span>
+                <span class="badge" th:text="${purchaseItem.workspaceName}"></span>
+            </div>
+            <div class="hero-actions">
+                <a class="button-secondary" th:if="${purchaseItem.canEdit}" th:href="@{/purchase-items/{id}/edit(id=${purchaseItem.id})}">Редактировать</a>
+                <a class="button-secondary" th:href="@{/purchase-items(workspaceId=${purchaseItem.workspaceId})}">Назад к списку</a>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="section-title">Информация</h2>
+                    <p class="page-copy">Основные параметры позиции закупки.</p>
+                </div>
+            </div>
+
+            <div class="data-grid">
+                <div class="data-point">
+                    <strong>Автор</strong>
+                    <span th:text="${purchaseItem.authorDisplayName}"></span>
+                </div>
+                <div class="data-point">
+                    <strong>Количество</strong>
+                    <span th:text="${purchaseItem.quantity} + ' ' + (${purchaseItem.unit} ?: '')"></span>
+                </div>
+                <div class="data-point">
+                    <strong>Цена</strong>
+                    <span th:text="${purchaseItem.priceAmount} + ' ' + (${purchaseItem.priceCurrency} ?: '')"></span>
+                </div>
+            </div>
+
+            <div class="message" th:if="${purchaseItem.rejectionReason}" th:text="${'Причина отклонения: ' + purchaseItem.rejectionReason}" style="margin-top:16px;"></div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="section-title">Комментарии</h2>
+                    <p class="page-copy">Обсуждение конкретной позиции.</p>
+                </div>
+                <a class="button" th:href="@{/comments/create(workspaceId=${purchaseItem.workspaceId},purchaseItemId=${purchaseItem.id})}">Добавить</a>
+            </div>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(comments)}">Комментариев пока нет. Добавьте первый комментарий к этой позиции.</div>
+
+            <div class="list-grid" th:if="${!#lists.isEmpty(comments)}">
+                <article class="entity-card" th:each="comment : ${comments}">
+                    <div class="entity-head">
+                        <div>
+                            <p class="entity-description" style="font-size:1.25rem; color:var(--text); margin-top:0;" th:text="${comment.content}"></p>
+                            <div class="muted" style="font-size:0.92rem;" th:text="'Автор: ' + ${comment.authorDisplayName}"></div>
+                        </div>
+                        <div class="badge-row">
+                            <span class="badge" th:text="'ID ' + ${comment.id}"></span>
+                            <span class="badge badge-success" th:if="${comment.edited}">Отредактировано</span>
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <a class="button-secondary" th:if="${comment.canEdit}" th:href="@{/comments/{id}/edit(id=${comment.id},workspaceId=${purchaseItem.workspaceId})}">Редактировать</a>
+                        <form class="ghost-form" th:if="${comment.canDelete}" th:action="@{/comments/{id}/delete(id=${comment.id},workspaceId=${purchaseItem.workspaceId})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button class="button-danger" type="submit">Удалить</button>
+                        </form>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

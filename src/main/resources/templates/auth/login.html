@@ -2,38 +2,54 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Вход</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-<h1>Вход</h1>
+<main class="auth-shell">
+    <section class="auth-card">
+        <div class="auth-visual">
+            <div class="eyebrow">GroupBuy</div>
+            <h1 class="auth-title">Собирайте закупки без хаоса в переписках.</h1>
+            <p class="auth-copy">Рабочие пространства, позиции закупки, комментарии и заказы в одном аккуратном интерфейсе.</p>
+        </div>
+        <div class="auth-panel">
+            <div class="eyebrow">Авторизация</div>
+            <h2 class="page-title">Вход в систему</h2>
+            <p class="page-copy">Используйте email и пароль, чтобы перейти к своим рабочим пространствам.</p>
 
-<div th:if="${param.error}">
-    Неверный email или пароль
-</div>
+            <div class="alert alert-error" th:if="${param.error}">Неверный email или пароль</div>
+            <div class="message" th:if="${param.logout}">Вы вышли из системы</div>
+            <div class="message" th:if="${param.registered}">Регистрация прошла успешно</div>
 
-<div th:if="${param.logout}">
-    Вы вышли из системы
-</div>
+            <form th:action="@{/auth/login}" method="post" class="panel" style="padding:24px; margin-top:20px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
-<div th:if="${param.registered}">
-    Регистрация прошла успешно
-</div>
+                <div class="field-full">
+                    <label for="username">Email</label>
+                    <input id="username" type="email" name="username" placeholder="name@company.com" required>
+                </div>
 
-<form th:action="@{/auth/login}" method="post">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-    <div>
-        <label>Email</label>
-        <input type="email" name="username" required>
-    </div>
+                <div class="field-full">
+                    <label for="password">Пароль</label>
+                    <input id="password" type="password" name="password" placeholder="Введите пароль" required>
+                </div>
 
-    <div>
-        <label>Пароль</label>
-        <input type="password" name="password" required>
-    </div>
+                <div class="field-full">
+                    <label class="checkbox-compact" for="remember-me">
+                        <input id="remember-me" type="checkbox" name="remember-me" checked>
+                        <span>Запомнить меня на этом устройстве</span>
+                    </label>
+                </div>
 
-    <button type="submit">Войти</button>
-</form>
-
-<a th:href="@{/auth/register}">Регистрация</a>
+                <div class="page-actions">
+                    <button class="button" type="submit">Войти</button>
+                    <a class="button-secondary" th:href="@{/auth/register}">Регистрация</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
 </body>
 </html>

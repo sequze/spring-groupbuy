@@ -14,4 +14,7 @@ public interface WorkspaceRepository extends JpaRepository<Workspace, Long> {
 
     @EntityGraph(attributePaths = {"owner"})
     Optional<Workspace> findById(Long id);
+
+    @EntityGraph(attributePaths = {"owner"})
+    Optional<Workspace> findByJoinToken(String joinToken);
 }

@@ -4,6 +4,7 @@ import org.abdrafikov.groupbuy.dto.OrderDto;
 import org.abdrafikov.groupbuy.dto.OrderForm;
 import org.abdrafikov.groupbuy.dto.OrderItemDto;
 import org.abdrafikov.groupbuy.dto.OrderItemForm;
+import org.abdrafikov.groupbuy.dto.OrderItemOptionDto;
 import org.abdrafikov.groupbuy.exception.AccessDeniedException;
 import org.abdrafikov.groupbuy.exception.ResourceNotFoundException;
 import org.abdrafikov.groupbuy.model.Order;
@@ -96,6 +97,33 @@ public class OrderService {
         form.setStatus(order.getStatus());
         form.setItems(buildAvailableItemForms(order.getWorkspace().getId(), selectedItems));
         return form;
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderItemOptionDto> getItemOptions(OrderForm form) {
+        if (form.getWorkspaceId() == null) {
+            return List.of();
+        }
+
+        Long currentUserId = currentUserService.getCurrentUserId();
+        workspaceService.getAccessibleWorkspace(form.getWorkspaceId(), currentUserId);
+
+        Map<Long, PurchaseItem> approvedItems = purchaseItemRepository
+                .findByWorkspaceIdAndStatusOrderByCreatedAtDesc(form.getWorkspaceId(), PurchaseItemStatus.APPROVED).stream()
+                .collect(LinkedHashMap::new, (map, item) -> map.put(item.getId(), item), Map::putAll);
+
+        if (form.getItems() == null || form.getItems().isEmpty()) {
+            return approvedItems.values().stream()
+                    .map(this::toOptionDto)
+                    .toList();
+        }
+
+        return form.getItems().stream()
+                .map(OrderItemForm::getPurchaseItemId)
+                .map(approvedItems::get)
+                .filter(item -> item != null)
+                .map(this::toOptionDto)
+                .toList();
     }
 
     @Transactional
@@ -197,12 +225,18 @@ public class OrderService {
             itemForm.setPurchaseItemId(purchaseItem.getId());
             itemForm.setSelected(selectedItems.containsKey(purchaseItem.getId()));
             itemForm.setQuantity(selectedItems.getOrDefault(purchaseItem.getId(), purchaseItem.getQuantity()));
-            itemForm.setTitle(purchaseItem.getTitle());
-            itemForm.setUnit(purchaseItem.getUnit());
-            itemForm.setPriceLabel(formatPriceLabel(purchaseItem));
             result.add(itemForm);
         }
         return result;
+    }
+
+    private OrderItemOptionDto toOptionDto(PurchaseItem purchaseItem) {
+        return OrderItemOptionDto.builder()
+                .purchaseItemId(purchaseItem.getId())
+                .title(purchaseItem.getTitle())
+                .unit(purchaseItem.getUnit())
+                .priceLabel(formatPriceLabel(purchaseItem))
+                .build();
     }
 
     private String formatPriceLabel(PurchaseItem purchaseItem) {

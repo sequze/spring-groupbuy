@@ -3,6 +3,7 @@ package org.abdrafikov.groupbuy.service;
 import lombok.RequiredArgsConstructor;
 import org.abdrafikov.groupbuy.dto.WorkspaceDto;
 import org.abdrafikov.groupbuy.dto.WorkspaceForm;
+import org.abdrafikov.groupbuy.dto.WorkspaceJoinForm;
 import org.abdrafikov.groupbuy.exception.AccessDeniedException;
 import org.abdrafikov.groupbuy.exception.ResourceNotFoundException;
 import org.abdrafikov.groupbuy.model.User;
@@ -60,6 +61,51 @@ public class WorkspaceService {
         workspaceMemberRepository.save(member);
 
         return toDto(savedWorkspace, currentUser.getId());
+    }
+
+    @Transactional
+    public WorkspaceDto joinByToken(WorkspaceJoinForm form) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        User currentUser = getCurrentUserEntity();
+
+        Workspace workspace = workspaceRepository.findByJoinToken(form.getToken().trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace с таким токеном не найден"));
+
+        if (!workspace.isActive()) {
+            throw new AccessDeniedException("Нельзя вступить в неактивный workspace");
+        }
+
+        if (workspace.getOwner().getId().equals(currentUserId)) {
+            return toDto(workspace, currentUserId);
+        }
+
+        if (workspaceMemberRepository.findByWorkspaceIdAndUserId(workspace.getId(), currentUserId).isPresent()) {
+            throw new AccessDeniedException("Вы уже состоите в этом workspace");
+        }
+
+        WorkspaceMember member = new WorkspaceMember();
+        member.setWorkspace(workspace);
+        member.setUser(currentUser);
+        member.setRole(WorkspaceRole.SPACE_MEMBER);
+        member.setInvitedBy(workspace.getOwner());
+        workspaceMemberRepository.save(member);
+
+        return toDto(workspace, currentUserId);
+    }
+
+    @Transactional
+    public void leaveWorkspace(Long workspaceId) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        Workspace workspace = getAccessibleWorkspace(workspaceId, currentUserId);
+
+        if (workspace.getOwner().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("Владелец workspace не может покинуть его, не удалив пространство");
+        }
+
+        WorkspaceMember membership = workspaceMemberRepository.findByWorkspaceIdAndUserId(workspaceId, currentUserId)
+                .orElseThrow(() -> new AccessDeniedException("Вы не состоите в этом workspace"));
+
+        workspaceMemberRepository.delete(membership);
     }
 
     @Transactional
@@ -156,6 +202,7 @@ public class WorkspaceService {
                 .active(workspace.isActive())
                 .currentUserOwner(isOwner)
                 .currentUserAdmin(isOwner || isWorkspaceAdmin(workspace.getId(), currentUserId))
+                .canLeave(!isOwner)
                 .build();
     }
 

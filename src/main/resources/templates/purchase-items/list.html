@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Позиции закупки</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="shell">
+    <header class="topbar">
+        <a class="brand" th:href="@{/workspaces}">
+            <span class="brand-mark">GB</span>
+            <span>GroupBuy</span>
+        </a>
+        <nav class="nav">
+            <a class="nav-link" th:href="@{/workspaces}">Workspaces</a>
+            <a class="nav-link" th:href="@{/comments(workspaceId=${workspaceId})}">Комментарии</a>
+            <a class="nav-link" th:href="@{/orders(workspaceId=${workspaceId})}">Заказы</a>
+        </nav>
+    </header>
+
+    <main class="page-shell">
+        <section class="hero-card">
+            <div class="eyebrow">Purchase Items</div>
+            <h1 class="page-title">Позиции закупки</h1>
+            <p class="page-copy">Выберите позицию, чтобы открыть подробности, комментарии и действия по ней.</p>
+            <div class="hero-actions">
+                <a class="button" th:href="@{/purchase-items/create(workspaceId=${workspaceId})}">Добавить позицию</a>
+                <a class="button-secondary" th:href="@{/workspaces}">Назад к workspaces</a>
+            </div>
+        </section>
+
+        <div class="message" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+        <section class="panel">
+            <div class="empty-state" th:if="${#lists.isEmpty(purchaseItems)}">Пока нет ни одной позиции закупки. Добавьте первую, чтобы начать обсуждение.</div>
+
+            <div class="list-grid" th:if="${!#lists.isEmpty(purchaseItems)}">
+                <article class="entity-card" th:each="item : ${purchaseItems}">
+                    <div class="entity-head">
+                        <div>
+                            <h2 class="entity-title">
+                                <a th:href="@{/purchase-items/{id}(id=${item.id})}" th:text="${item.title}">Позиция</a>
+                            </h2>
+                            <p class="entity-description" th:if="${item.description}" th:text="${item.description}"></p>
+                        </div>
+                        <div class="badge-row">
+                            <span class="badge" th:text="'ID ' + ${item.id}"></span>
+                            <span class="badge badge-accent" th:text="${item.status}"></span>
+                        </div>
+                    </div>
+
+                    <div class="data-grid">
+                        <div class="data-point">
+                            <strong>Автор</strong>
+                            <span th:text="${item.authorDisplayName}"></span>
+                        </div>
+                        <div class="data-point">
+                            <strong>Количество</strong>
+                            <span th:text="${item.quantity} + ' ' + (${item.unit} ?: '')"></span>
+                        </div>
+                        <div class="data-point">
+                            <strong>Цена</strong>
+                            <span th:text="${item.priceAmount} + ' ' + (${item.priceCurrency} ?: '')"></span>
+                        </div>
+                    </div>
+
+                    <div class="message" th:if="${item.rejectionReason}" th:text="${'Причина отклонения: ' + item.rejectionReason}" style="margin-top:16px;"></div>
+
+                    <div class="card-actions">
+                        <a class="button" th:href="@{/purchase-items/{id}(id=${item.id})}">Открыть</a>
+                        <a class="chip-link" th:href="@{/comments/create(workspaceId=${workspaceId},purchaseItemId=${item.id})}">Комментировать</a>
+                        <a class="button-secondary" th:if="${item.canEdit}" th:href="@{/purchase-items/{id}/edit(id=${item.id})}">Редактировать</a>
+                        <form class="ghost-form" th:if="${item.canDelete}" th:action="@{/purchase-items/{id}/delete(id=${item.id},workspaceId=${workspaceId})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button class="button-danger" type="submit">Удалить</button>
+                        </form>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

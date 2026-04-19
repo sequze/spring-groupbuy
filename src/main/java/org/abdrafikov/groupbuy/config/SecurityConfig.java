@@ -1,5 +1,6 @@
 package org.abdrafikov.groupbuy.config;
 
+import org.abdrafikov.groupbuy.service.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,13 +15,18 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final String REMEMBER_ME_KEY = "groupbuy-remember-me-key";
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            CustomUserDetailsService customUserDetailsService
+    ) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -42,11 +48,17 @@ public class SecurityConfig {
                         .failureUrl("/auth/login?error")
                         .permitAll()
                 )
+                .rememberMe(rememberMe -> rememberMe
+                        .key(REMEMBER_ME_KEY)
+                        .rememberMeParameter("remember-me")
+                        .tokenValiditySeconds(60 * 60 * 24 * 14)
+                        .userDetailsService(customUserDetailsService)
+                )
                 .logout(logout -> logout
                         .logoutUrl("/auth/logout")
                         .logoutSuccessUrl("/auth/login?logout")
                         .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
+                        .deleteCookies("JSESSIONID", "remember-me")
                 );
 
         return http.build();

@@ -13,5 +13,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByPurchaseItemWorkspaceIdOrderByCreatedAtDesc(Long workspaceId);
 
     @EntityGraph(attributePaths = {"purchaseItem", "purchaseItem.workspace", "author"})
+    List<Comment> findByPurchaseItemIdOrderByCreatedAtDesc(Long purchaseItemId);
+
+    @EntityGraph(attributePaths = {"purchaseItem", "purchaseItem.workspace", "author"})
     Optional<Comment> findById(Long id);
 }
