@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title}">Ошибка</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="shell">
+    <main class="page-shell">
+        <section class="hero-card">
+            <div class="eyebrow">Ошибка</div>
+            <h1 class="page-title" th:text="${title}">Что-то пошло не так</h1>
+            <p class="page-copy" th:text="${message}">Что-то пошло не так.</p>
+            <div class="hero-actions">
+                <a class="button" th:href="@{/workspaces}">Вернуться к workspaces</a>
+                <a class="button-secondary" th:href="@{/profile}">Профиль</a>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

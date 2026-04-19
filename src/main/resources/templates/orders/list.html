@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Заказы</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="shell">
+    <header class="topbar">
+        <a class="brand" th:href="@{/workspaces}">
+            <span class="brand-mark">GB</span>
+            <span>GroupBuy</span>
+        </a>
+        <nav class="nav">
+            <a class="nav-link" th:href="@{/purchase-items(workspaceId=${workspaceId})}">Позиции</a>
+            <a class="nav-link" th:href="@{/comments(workspaceId=${workspaceId})}">Комментарии</a>
+            <a class="nav-link" th:href="@{/workspaces}">Workspaces</a>
+        </nav>
+    </header>
+
+    <main class="page-shell">
+        <section class="hero-card">
+            <div class="eyebrow">Orders</div>
+            <h1 class="page-title">Заказы workspace</h1>
+            <p class="page-copy">Каждый заказ собирается из approved-позиций пространства, а итоговая сумма рассчитывается по выбранным строкам заказа.</p>
+            <div class="hero-actions">
+                <a class="button" th:href="@{/orders/create(workspaceId=${workspaceId})}">Создать заказ</a>
+                <a class="button-secondary" th:href="@{/workspaces}">Назад к workspaces</a>
+            </div>
+        </section>
+
+        <div class="message" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+        <section class="panel">
+            <div class="empty-state" th:if="${#lists.isEmpty(orders)}">Заказов пока нет. Создайте первый из approved-позиций этого workspace.</div>
+
+            <div class="list-grid" th:if="${!#lists.isEmpty(orders)}">
+                <article class="entity-card" th:each="order : ${orders}">
+                    <div class="entity-head">
+                        <div>
+                            <h2 class="entity-title" th:text="${order.title}">Заказ</h2>
+                            <p class="entity-description" th:if="${order.description}" th:text="${order.description}"></p>
+                        </div>
+                        <div class="badge-row">
+                            <span class="badge" th:text="'ID ' + ${order.id}"></span>
+                            <span class="badge badge-accent" th:text="${order.status}"></span>
+                        </div>
+                    </div>
+
+                    <div class="data-grid">
+                        <div class="data-point">
+                            <strong>Автор</strong>
+                            <span th:text="${order.createdByDisplayName}"></span>
+                        </div>
+                        <div class="data-point">
+                            <strong>Сумма</strong>
+                            <span th:text="${order.totalAmount} + ' ' + ${order.currency}"></span>
+                        </div>
+                        <div class="data-point">
+                            <strong>Позиций</strong>
+                            <span th:text="${order.itemCount}"></span>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap" th:if="${!#lists.isEmpty(order.items)}" style="margin-top:16px;">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Позиция</th>
+                                <th>Количество</th>
+                                <th>Цена</th>
+                                <th>Подытог</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="item : ${order.items}">
+                                <td>
+                                    <div class="table-title" th:text="${item.title}"></div>
+                                    <div class="muted" th:if="${item.unit}" th:text="'Единица: ' + ${item.unit}"></div>
+                                </td>
+                                <td th:text="${item.quantity}"></td>
+                                <td th:text="${item.price} + ' ' + ${item.currency}"></td>
+                                <td th:text="${item.subtotal} + ' ' + ${item.currency}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card-actions">
+                        <a class="button-secondary" th:if="${order.canEdit}" th:href="@{/orders/{id}/edit(id=${order.id})}">Редактировать</a>
+                        <form class="ghost-form" th:if="${order.canDelete}" th:action="@{/orders/{id}/delete(id=${order.id},workspaceId=${workspaceId})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button class="button-danger" type="submit">Удалить</button>
+                        </form>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

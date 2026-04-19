@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle}">Создание позиции закупки</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="shell">
+    <header class="topbar">
+        <a class="brand" th:href="@{/workspaces}">
+            <span class="brand-mark">GB</span>
+            <span>GroupBuy</span>
+        </a>
+        <nav class="nav">
+            <a class="nav-link" th:href="@{/purchase-items(workspaceId=${purchaseItemForm.workspaceId})}">Позиции</a>
+            <a class="nav-link" th:href="@{/workspaces}">Workspaces</a>
+        </nav>
+    </header>
+
+    <main class="page-shell">
+        <section class="hero-card">
+            <div class="eyebrow">Новая позиция</div>
+            <h1 class="page-title" th:text="${pageTitle}">Создание позиции закупки</h1>
+            <p class="page-copy">Зафиксируйте, что именно нужно команде, в каком объеме и по какой цене это ожидается.</p>
+        </section>
+
+        <section class="panel">
+            <form th:action="${formAction}" th:object="${purchaseItemForm}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="workspaceId">Workspace</label>
+                        <select id="workspaceId" th:field="*{workspaceId}">
+                            <option th:each="workspace : ${workspaces}" th:value="${workspace.id}" th:text="${workspace.name}"></option>
+                        </select>
+                        <div class="error-text" th:errors="*{workspaceId}"></div>
+                    </div>
+
+                    <div class="field">
+                        <label for="status">Статус</label>
+                        <select id="status" th:field="*{status}">
+                            <option th:each="status : ${statuses}" th:value="${status}" th:text="${status}"></option>
+                        </select>
+                        <div class="error-text" th:errors="*{status}"></div>
+                    </div>
+
+                    <div class="field-full">
+                        <label for="title">Название</label>
+                        <input id="title" type="text" th:field="*{title}" placeholder="Например, офисные стулья">
+                        <div class="error-text" th:errors="*{title}"></div>
+                    </div>
+
+                    <div class="field-full">
+                        <label for="description">Описание</label>
+                        <textarea id="description" th:field="*{description}" rows="5" placeholder="Кратко опишите назначение и требования"></textarea>
+                        <div class="error-text" th:errors="*{description}"></div>
+                    </div>
+
+                    <div class="field">
+                        <label for="quantity">Количество</label>
+                        <input id="quantity" type="number" min="1" th:field="*{quantity}">
+                        <div class="error-text" th:errors="*{quantity}"></div>
+                    </div>
+
+                    <div class="field">
+                        <label for="unit">Единица измерения</label>
+                        <input id="unit" type="text" th:field="*{unit}" placeholder="шт, кг, м">
+                        <div class="error-text" th:errors="*{unit}"></div>
+                    </div>
+
+                    <div class="field">
+                        <label for="priceAmount">Цена</label>
+                        <input id="priceAmount" type="number" step="0.01" min="0.01" th:field="*{priceAmount}">
+                        <div class="error-text" th:errors="*{priceAmount}"></div>
+                    </div>
+
+                    <div class="field">
+                        <label for="priceCurrency">Валюта</label>
+                        <input id="priceCurrency" type="text" th:field="*{priceCurrency}" placeholder="RUB">
+                        <div class="error-text" th:errors="*{priceCurrency}"></div>
+                    </div>
+                </div>
+
+                <div class="page-actions">
+                    <button class="button" type="submit">Сохранить</button>
+                    <a class="button-secondary" th:href="@{/purchase-items(workspaceId=${purchaseItemForm.workspaceId})}">Назад</a>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+</body>
+</html>
