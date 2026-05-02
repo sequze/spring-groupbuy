@@ -27,6 +27,15 @@ public class CommentService {
     private final WorkspaceService workspaceService;
 
     @Transactional(readOnly = true)
+    public List<CommentDto> getAllAccessible() {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        return commentRepository.findAllByOrderByCreatedAtDesc().stream()
+                .filter(comment -> canAccess(comment, currentUserId))
+                .map(comment -> toDto(comment, currentUserId))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<CommentDto> getByWorkspace(Long workspaceId) {
         Long currentUserId = currentUserService.getCurrentUserId();
         workspaceService.getAccessibleWorkspace(workspaceId, currentUserId);
@@ -93,6 +102,14 @@ public class CommentService {
     }
 
     @Transactional
+    public CommentDto create(Long purchaseItemId, String content) {
+        CommentForm form = new CommentForm();
+        form.setPurchaseItemId(purchaseItemId);
+        form.setContent(content);
+        return create(form);
+    }
+
+    @Transactional
     public CommentDto update(Long id, CommentForm form) {
         Long currentUserId = currentUserService.getCurrentUserId();
         Comment comment = getAccessibleComment(id, currentUserId);
@@ -101,6 +118,17 @@ public class CommentService {
         PurchaseItem purchaseItem = purchaseItemService.getAccessibleItem(form.getPurchaseItemId(), currentUserId);
         comment.setPurchaseItem(purchaseItem);
         comment.setContent(form.getContent());
+        comment.setEdited(true);
+        return toDto(comment, currentUserId);
+    }
+
+    @Transactional
+    public CommentDto updateContent(Long id, String content) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        Comment comment = getAccessibleComment(id, currentUserId);
+        ensureCanManage(comment, currentUserId);
+
+        comment.setContent(content);
         comment.setEdited(true);
         return toDto(comment, currentUserId);
     }
@@ -137,6 +165,15 @@ public class CommentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Текущий пользователь не найден"));
     }
 
+    private boolean canAccess(Comment comment, Long currentUserId) {
+        try {
+            workspaceService.getAccessibleWorkspace(comment.getPurchaseItem().getWorkspace().getId(), currentUserId);
+            return true;
+        } catch (AccessDeniedException ex) {
+            return false;
+        }
+    }
+
     private CommentDto toDto(Comment comment, Long currentUserId) {
         boolean canManage = comment.getAuthor().getId().equals(currentUserId)
                 || workspaceService.isWorkspaceAdmin(comment.getPurchaseItem().getWorkspace().getId(), currentUserId)
@@ -146,8 +183,10 @@ public class CommentService {
                 .id(comment.getId())
                 .purchaseItemId(comment.getPurchaseItem().getId())
                 .purchaseItemTitle(comment.getPurchaseItem().getTitle())
+                .authorId(comment.getAuthor().getId())
                 .authorDisplayName(comment.getAuthor().getDisplayName())
                 .content(comment.getContent())
+                .createdAt(comment.getCreatedAt())
                 .edited(comment.isEdited())
                 .canEdit(canManage)
                 .canDelete(canManage)
