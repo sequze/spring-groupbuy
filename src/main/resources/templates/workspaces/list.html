@@ -2,14 +2,129 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Workspaces</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-<h1>Список пространств</h1>
+<div class="shell">
+    <header class="topbar">
+        <a class="brand" th:href="@{/workspaces}">
+            <span class="brand-mark">GB</span>
+            <span>GroupBuy</span>
+        </a>
+        <nav class="nav">
+            <a class="nav-link" th:href="@{/workspaces}">Workspaces</a>
+            <a class="nav-link" th:href="@{/profile}">Профиль</a>
+            <form class="ghost-form" th:action="@{/auth/logout}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button class="button-secondary" type="submit">Выйти</button>
+            </form>
+        </nav>
+    </header>
 
-<form th:action="@{/auth/logout}" method="post">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-    <button type="submit">Выйти</button>
-</form>
+    <main>
+        <section class="hero">
+            <article class="hero-card">
+                <div class="eyebrow">Рабочие пространства</div>
+                <h1 class="hero-title">Управляйте закупками в одном месте.</h1>
+                <p class="hero-copy">Создавайте приватные пространства, распределяйте позиции, обсуждайте детали и переводите согласованные предложения в заказы.</p>
+                <div class="hero-actions">
+                    <a class="button" th:href="@{/workspaces/create}">Создать workspace</a>
+                    <a class="button-secondary" th:href="@{/profile}">Открыть профиль</a>
+                </div>
+            </article>
+
+            <aside class="metric-card">
+                <span class="metric-label">Всего пространств</span>
+                <span class="metric-value" th:text="${#lists.size(workspaces)}">0</span>
+                <p class="metric-note">Все пространства, к которым у пользователя есть доступ прямо сейчас.</p>
+            </aside>
+        </section>
+
+        <div class="message" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <div class="alert alert-error" th:if="${joinErrorMessage}" th:text="${joinErrorMessage}"></div>
+
+        <section class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="section-title">Вступить по токену</h2>
+                    <p class="page-copy">Введите join token, чтобы подключиться к существующему workspace как участник.</p>
+                </div>
+            </div>
+
+            <form th:action="@{/workspaces/join}" th:object="${workspaceJoinForm}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <div class="form-grid">
+                    <div class="field-full">
+                        <label for="token">Join token</label>
+                        <input id="token" type="text" th:field="*{token}" placeholder="Вставьте токен пространства">
+                        <div class="error-text" th:errors="*{token}"></div>
+                    </div>
+                </div>
+                <div class="page-actions">
+                    <button class="button" type="submit">Вступить</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="section-title">Список workspace</h2>
+                    <p class="page-copy">Каждая карточка ведет к позициям закупки, комментариям и заказам.</p>
+                </div>
+            </div>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(workspaces)}">У вас пока нет доступных рабочих пространств. Начните с создания первого или вступите по токену.</div>
+
+            <div class="list-grid" th:if="${!#lists.isEmpty(workspaces)}">
+                <article class="entity-card" th:each="workspace : ${workspaces}">
+                    <div class="entity-head">
+                        <div>
+                            <h3 class="entity-title" th:text="${workspace.name}">Workspace</h3>
+                            <p class="entity-description" th:if="${workspace.description}" th:text="${workspace.description}"></p>
+                        </div>
+                        <div class="badge-row">
+                            <span class="badge" th:text="'ID ' + ${workspace.id}">ID</span>
+                            <span class="badge badge-success" th:if="${workspace.active}">Активен</span>
+                            <span class="badge badge-warning" th:if="${!workspace.active}">Отключен</span>
+                        </div>
+                    </div>
+
+                    <div class="data-grid">
+                        <div class="data-point">
+                            <strong>Владелец</strong>
+                            <span th:text="${workspace.ownerDisplayName}"></span>
+                        </div>
+                        <div class="data-point">
+                            <strong>Токен</strong>
+                            <span th:text="${workspace.joinToken}"></span>
+                        </div>
+                        <div class="data-point">
+                            <strong>Права</strong>
+                            <span th:text="${workspace.currentUserAdmin ? 'Администратор' : 'Участник'}"></span>
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <a class="chip-link" th:href="@{/purchase-items(workspaceId=${workspace.id})}">Позиции</a>
+                        <a class="chip-link" th:href="@{/comments(workspaceId=${workspace.id})}">Комментарии</a>
+                        <a class="chip-link" th:href="@{/orders(workspaceId=${workspace.id})}">Заказы</a>
+                        <a class="button-secondary" th:if="${workspace.currentUserAdmin}" th:href="@{/workspaces/{id}/edit(id=${workspace.id})}">Редактировать</a>
+                        <form class="ghost-form" th:if="${workspace.canLeave}" th:action="@{/workspaces/{id}/leave(id=${workspace.id})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button class="button-secondary" type="submit">Покинуть</button>
+                        </form>
+                        <form class="ghost-form" th:if="${workspace.currentUserOwner}" th:action="@{/workspaces/{id}/delete(id=${workspace.id})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button class="button-danger" type="submit">Удалить</button>
+                        </form>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+</div>
 </body>
 </html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle}">Создание workspace</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="shell">
+    <header class="topbar">
+        <a class="brand" th:href="@{/workspaces}">
+            <span class="brand-mark">GB</span>
+            <span>GroupBuy</span>
+        </a>
+        <nav class="nav">
+            <a class="nav-link" th:href="@{/workspaces}">Workspaces</a>
+            <a class="nav-link" th:href="@{/profile}">Профиль</a>
+        </nav>
+    </header>
+
+    <main class="page-shell">
+        <section class="hero-card">
+            <div class="eyebrow">Workspace</div>
+            <h1 class="page-title" th:text="${pageTitle}">Создание workspace</h1>
+            <p class="page-copy">Задайте рабочему пространству ясное название и короткое описание, чтобы участники сразу понимали контекст закупок.</p>
+        </section>
+
+        <section class="panel">
+            <form th:action="${formAction}" th:object="${workspaceForm}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                <div class="form-grid">
+                    <div class="field-full">
+                        <label for="name">Название</label>
+                        <input id="name" type="text" th:field="*{name}" placeholder="Например, Команда разработки">
+                        <div class="error-text" th:errors="*{name}"></div>
+                    </div>
+
+                    <div class="field-full">
+                        <label for="description">Описание</label>
+                        <textarea id="description" th:field="*{description}" rows="6" placeholder="Кратко опишите назначение пространства"></textarea>
+                        <div class="error-text" th:errors="*{description}"></div>
+                    </div>
+
+                    <div class="field-full">
+                        <label class="checkbox-field" for="active">
+                            <input id="active" type="checkbox" th:field="*{active}">
+                            <span>Workspace активен и доступен участникам</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="page-actions">
+                    <button class="button" type="submit">Сохранить</button>
+                    <a class="button-secondary" th:href="@{/workspaces}">Назад</a>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+</body>
+</html>
