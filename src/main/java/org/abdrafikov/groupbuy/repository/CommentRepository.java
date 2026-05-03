@@ -10,6 +10,9 @@ import java.util.Optional;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     @EntityGraph(attributePaths = {"purchaseItem", "purchaseItem.workspace", "author"})
+    List<Comment> findAllByOrderByCreatedAtDesc();
+
+    @EntityGraph(attributePaths = {"purchaseItem", "purchaseItem.workspace", "author"})
     List<Comment> findByPurchaseItemWorkspaceIdOrderByCreatedAtDesc(Long workspaceId);
 
     @EntityGraph(attributePaths = {"purchaseItem", "purchaseItem.workspace", "author"})

@@ -3,6 +3,7 @@ package org.abdrafikov.groupbuy.config;
 import org.abdrafikov.groupbuy.service.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -10,6 +11,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -27,7 +30,12 @@ public class SecurityConfig {
             HttpSecurity http,
             CustomUserDetailsService customUserDetailsService
     ) throws Exception {
+        PathPatternRequestMatcher apiRequestMatcher = PathPatternRequestMatcher.withDefaults().matcher("/api/**");
+
         http
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers(apiRequestMatcher)
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
@@ -36,10 +44,19 @@ public class SecurityConfig {
                                 "/css/**",
                                 "/error",
                                 "/js/**",
-                                "/images/**"
+                                "/images/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**"
                         ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .defaultAuthenticationEntryPointFor(
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                apiRequestMatcher
+                        )
                 )
                 .formLogin(form -> form
                         .loginPage("/auth/login")
