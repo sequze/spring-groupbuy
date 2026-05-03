@@ -109,8 +109,8 @@
 
                     <div class="card-actions">
                         <a class="chip-link" th:href="@{/purchase-items(workspaceId=${workspace.id})}">Позиции</a>
-                        <a class="chip-link" th:href="@{/comments(workspaceId=${workspace.id})}">Комментарии</a>
                         <a class="chip-link" th:href="@{/orders(workspaceId=${workspace.id})}">Заказы</a>
+                        <a class="chip-link" th:href="@{/workspaces/{id}/members(id=${workspace.id})}">Участники</a>
                         <a class="button-secondary" th:if="${workspace.currentUserAdmin}" th:href="@{/workspaces/{id}/edit(id=${workspace.id})}">Редактировать</a>
                         <form class="ghost-form" th:if="${workspace.canLeave}" th:action="@{/workspaces/{id}/leave(id=${workspace.id})}" method="post">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">

@@ -68,10 +68,9 @@
                     <h2 class="section-title">Комментарии</h2>
                     <p class="page-copy">Обсуждение конкретной позиции.</p>
                 </div>
-                <a class="button" th:href="@{/comments/create(workspaceId=${purchaseItem.workspaceId},purchaseItemId=${purchaseItem.id})}">Добавить</a>
             </div>
 
-            <div class="empty-state" th:if="${#lists.isEmpty(comments)}">Комментариев пока нет. Добавьте первый комментарий к этой позиции.</div>
+            <div class="empty-state" th:if="${#lists.isEmpty(comments)}">Комментариев пока нет.</div>
 
             <div class="list-grid" th:if="${!#lists.isEmpty(comments)}">
                 <article class="entity-card" th:each="comment : ${comments}">
@@ -84,14 +83,6 @@
                             <span class="badge" th:text="'ID ' + ${comment.id}"></span>
                             <span class="badge badge-success" th:if="${comment.edited}">Отредактировано</span>
                         </div>
-                    </div>
-
-                    <div class="card-actions">
-                        <a class="button-secondary" th:if="${comment.canEdit}" th:href="@{/comments/{id}/edit(id=${comment.id},workspaceId=${purchaseItem.workspaceId})}">Редактировать</a>
-                        <form class="ghost-form" th:if="${comment.canDelete}" th:action="@{/comments/{id}/delete(id=${comment.id},workspaceId=${purchaseItem.workspaceId})}" method="post">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                            <button class="button-danger" type="submit">Удалить</button>
-                        </form>
                     </div>
                 </article>
             </div>
