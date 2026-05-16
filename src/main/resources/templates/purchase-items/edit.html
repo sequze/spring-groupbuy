@@ -18,8 +18,8 @@
         </nav>
     </header>
 
-    <main class="page-shell">
-        <section class="hero-card">
+    <main class="editor-layout">
+        <aside class="editor-aside panel">
             <div class="eyebrow">Редактирование</div>
             <h1 class="page-title" th:text="${pageTitle}">Редактирование позиции закупки</h1>
             <p class="page-copy">Автор редактирует содержимое заявки, а администратор workspace дополнительно может менять ее статус.</p>
@@ -27,9 +27,9 @@
                 <span class="badge" th:text="'ID ' + ${purchaseItem.id}"></span>
                 <span class="badge badge-accent" th:text="${purchaseItem.status}"></span>
             </div>
-        </section>
+        </aside>
 
-        <section class="panel">
+        <section class="panel editor-panel">
             <form th:action="${formAction}" th:object="${purchaseItemForm}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
@@ -45,16 +45,17 @@
                     <div class="field" th:if="${canModerateStatus}">
                         <label for="status">Статус</label>
                         <select id="status" th:field="*{status}">
-                            <option th:each="status : ${statuses}" th:value="${status}" th:text="${status}"></option>
+                            <option th:each="status : ${editStatuses}" th:value="${status}" th:text="${status}"></option>
                         </select>
                         <div class="error-text" th:errors="*{status}"></div>
                     </div>
 
                     <div class="field" th:if="${!canModerateStatus}">
                         <label>Статус</label>
+                        <input type="hidden" name="status" value="NEW">
                         <div class="checkbox-field">
-                            <span class="badge badge-accent" th:text="${purchaseItem.status}"></span>
-                            <span>Статус меняет только администратор workspace</span>
+                            <span class="badge badge-accent">NEW</span>
+                            <span>При сохранении позиция останется новой</span>
                         </div>
                     </div>
 
@@ -68,6 +69,12 @@
                         <label for="description">Описание</label>
                         <textarea id="description" th:field="*{description}" rows="5"></textarea>
                         <div class="error-text" th:errors="*{description}"></div>
+                    </div>
+
+                    <div class="field-full">
+                        <label for="productUrl">Ссылка на товар</label>
+                        <input id="productUrl" type="url" th:field="*{productUrl}">
+                        <div class="error-text" th:errors="*{productUrl}"></div>
                     </div>
 
                     <div class="field">
@@ -94,11 +101,6 @@
                         <div class="error-text" th:errors="*{priceCurrency}"></div>
                     </div>
 
-                    <div class="field-full" th:if="${canModerateStatus}">
-                        <label for="rejectionReason">Причина отклонения</label>
-                        <textarea id="rejectionReason" th:field="*{rejectionReason}" rows="4"></textarea>
-                        <div class="error-text" th:errors="*{rejectionReason}"></div>
-                    </div>
                 </div>
 
                 <div class="page-actions">

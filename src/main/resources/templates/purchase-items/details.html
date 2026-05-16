@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:if="${_csrf}" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:if="${_csrf}" th:content="${_csrf.headerName}">
     <title th:text="${purchaseItem.title}">Позиция закупки</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script defer th:src="@{/js/purchase-item-comments.js}"></script>
 </head>
 <body>
 <div class="shell">
@@ -20,72 +23,137 @@
         </nav>
     </header>
 
-    <main class="page-shell">
-        <section class="hero-card">
-            <div class="eyebrow">Позиция закупки</div>
-            <h1 class="page-title" th:text="${purchaseItem.title}">Позиция</h1>
-            <p class="page-copy" th:if="${purchaseItem.description}" th:text="${purchaseItem.description}"></p>
-            <div class="badge-row">
-                <span class="badge" th:text="'ID ' + ${purchaseItem.id}"></span>
-                <span class="badge badge-accent" th:text="${purchaseItem.status}"></span>
-                <span class="badge" th:text="${purchaseItem.workspaceName}"></span>
-            </div>
-            <div class="hero-actions">
-                <a class="button-secondary" th:if="${purchaseItem.canEdit}" th:href="@{/purchase-items/{id}/edit(id=${purchaseItem.id})}">Редактировать</a>
-                <a class="button-secondary" th:href="@{/purchase-items(workspaceId=${purchaseItem.workspaceId})}">Назад к списку</a>
-            </div>
-        </section>
-
-        <section class="panel">
-            <div class="panel-header">
-                <div>
-                    <h2 class="section-title">Информация</h2>
-                    <p class="page-copy">Основные параметры позиции закупки.</p>
-                </div>
-            </div>
-
-            <div class="data-grid">
-                <div class="data-point">
-                    <strong>Автор</strong>
-                    <span th:text="${purchaseItem.authorDisplayName}"></span>
-                </div>
-                <div class="data-point">
-                    <strong>Количество</strong>
-                    <span th:text="${purchaseItem.quantity} + ' ' + (${purchaseItem.unit} ?: '')"></span>
-                </div>
-                <div class="data-point">
-                    <strong>Цена</strong>
-                    <span th:text="${purchaseItem.priceAmount} + ' ' + (${purchaseItem.priceCurrency} ?: '')"></span>
-                </div>
-            </div>
-
-            <div class="message" th:if="${purchaseItem.rejectionReason}" th:text="${'Причина отклонения: ' + purchaseItem.rejectionReason}" style="margin-top:16px;"></div>
-        </section>
-
-        <section class="panel">
-            <div class="panel-header">
-                <div>
-                    <h2 class="section-title">Комментарии</h2>
-                    <p class="page-copy">Обсуждение конкретной позиции.</p>
-                </div>
-            </div>
-
-            <div class="empty-state" th:if="${#lists.isEmpty(comments)}">Комментариев пока нет.</div>
-
-            <div class="list-grid" th:if="${!#lists.isEmpty(comments)}">
-                <article class="entity-card" th:each="comment : ${comments}">
-                    <div class="entity-head">
-                        <div>
-                            <p class="entity-description" style="font-size:1.25rem; color:var(--text); margin-top:0;" th:text="${comment.content}"></p>
-                            <div class="muted" style="font-size:0.92rem;" th:text="'Автор: ' + ${comment.authorDisplayName}"></div>
-                        </div>
-                        <div class="badge-row">
-                            <span class="badge" th:text="'ID ' + ${comment.id}"></span>
-                            <span class="badge badge-success" th:if="${comment.edited}">Отредактировано</span>
-                        </div>
+    <main class="item-detail-page">
+        <section class="page-shell detail-summary">
+            <article class="hero-card purchase-item-header">
+                <div class="purchase-item-header-main">
+                    <div class="eyebrow">Позиция закупки</div>
+                    <h1 class="page-title" th:text="${purchaseItem.title}">Позиция</h1>
+                    <p class="page-copy" th:if="${purchaseItem.description}" th:text="${purchaseItem.description}"></p>
+                    <div class="badge-row">
+                        <span class="badge" th:text="'ID ' + ${purchaseItem.id}"></span>
+                        <span class="badge badge-accent" th:text="${purchaseItem.status}"></span>
+                        <span class="badge" th:text="${purchaseItem.workspaceName}"></span>
                     </div>
-                </article>
-            </div>
+                </div>
+                <div class="hero-actions">
+                    <a class="button-secondary" th:if="${purchaseItem.canEdit}" th:href="@{/purchase-items/{id}/edit(id=${purchaseItem.id})}">Редактировать</a>
+                    <a class="button-secondary" th:href="@{/purchase-items(workspaceId=${purchaseItem.workspaceId})}">Назад к списку</a>
+                </div>
+            </article>
+        </section>
+
+        <section class="detail-sections">
+            <article class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2 class="section-title">Параметры</h2>
+                        <p class="page-copy">Основные параметры позиции закупки.</p>
+                    </div>
+                </div>
+
+                <div class="detail-params">
+                    <div class="detail-param">
+                        <strong>Автор</strong>
+                        <span th:text="${purchaseItem.authorDisplayName}"></span>
+                    </div>
+                    <div class="detail-param">
+                        <strong>Количество</strong>
+                        <span th:text="${purchaseItem.quantity} + ' ' + (${purchaseItem.unit} ?: '')"></span>
+                    </div>
+                    <div class="detail-param">
+                        <strong>Цена</strong>
+                        <span th:text="${purchaseItem.priceAmount} + ' ' + (${purchaseItem.priceCurrency} ?: '')"></span>
+                    </div>
+                    <div class="detail-param detail-param-wide" th:if="${purchaseItem.productUrl}">
+                        <strong>Ссылка на товар</strong>
+                        <a th:href="${purchaseItem.productUrl}" th:text="${purchaseItem.productUrl}" target="_blank" rel="noopener noreferrer"></a>
+                    </div>
+                </div>
+
+                <div class="message section-spacer" th:if="${purchaseItem.rejectionReason}" th:text="${'Причина отклонения: ' + purchaseItem.rejectionReason}"></div>
+            </article>
+
+            <article class="panel conversation-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2 class="section-title">Комментарии</h2>
+                        <p class="page-copy">Обсуждение позиции закупки.</p>
+                    </div>
+                </div>
+
+                <form class="comment-form"
+                      data-comment-form
+                      th:attr="data-purchase-item-id=${purchaseItem.id}"
+                      action="/api/comments"
+                      method="post">
+                    <div class="field-full">
+                        <label for="comment-content">Новый комментарий</label>
+                        <textarea id="comment-content"
+                                  name="content"
+                                  maxlength="2000"
+                                  required
+                                  placeholder="Напишите комментарий"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="button" type="submit" data-comment-submit>Добавить комментарий</button>
+                    </div>
+                    <div class="alert alert-error comment-feedback" data-comment-error hidden></div>
+                    <div class="message comment-feedback" data-comment-success hidden></div>
+                </form>
+
+                <div class="empty-state compact-empty-state" data-comments-empty th:hidden="${!#lists.isEmpty(comments)}">
+                    <strong>Комментариев пока нет</strong>
+                    <span>Здесь появятся заметки и обсуждение этой позиции.</span>
+                </div>
+
+                <div class="list-grid comments-list" data-comments-list>
+                    <article class="entity-card comment-card"
+                             th:each="comment : ${comments}"
+                             th:attr="data-comment-id=${comment.id},data-can-edit=${comment.canEdit},data-can-delete=${comment.canDelete}">
+                        <div class="entity-head">
+                            <div class="comment-content-column">
+                                <p class="comment-body" data-comment-body th:text="${comment.content}"></p>
+                                <div class="muted comment-meta" th:text="'Автор: ' + ${comment.authorDisplayName}"></div>
+                                <form class="comment-edit-form" data-comment-edit-form hidden>
+                                    <textarea name="content"
+                                              maxlength="2000"
+                                              required
+                                              data-comment-edit-content
+                                              th:text="${comment.content}"></textarea>
+                                    <div class="comment-actions">
+                                        <button class="button" type="submit">Сохранить</button>
+                                        <button class="button-secondary" type="button" data-comment-cancel>Отмена</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="comment-side">
+                                <div class="badge-row">
+                                    <span class="badge" th:text="'ID ' + ${comment.id}"></span>
+                                    <span class="badge badge-success" data-comment-edited th:hidden="${!comment.edited}">Отредактировано</span>
+                                </div>
+                                <div class="comment-actions" th:if="${comment.canEdit || comment.canDelete}">
+                                    <button class="icon-button" type="button" data-comment-edit th:if="${comment.canEdit}" aria-label="Редактировать" title="Редактировать">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16v4Z"></path>
+                                            <path d="m13.5 6.5 4 4"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="icon-button icon-button-danger" type="button" data-comment-delete th:if="${comment.canDelete}" aria-label="Удалить" title="Удалить">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M4 7h16"></path>
+                                            <path d="M10 11v6"></path>
+                                            <path d="M14 11v6"></path>
+                                            <path d="M6 7l1 13h10l1-13"></path>
+                                            <path d="M9 7V4h6v3"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </article>
         </section>
     </main>
 </div>

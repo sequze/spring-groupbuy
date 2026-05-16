@@ -23,9 +23,11 @@ public class WorkspaceController {
     }
 
     @GetMapping
-    public String list(Model model) {
+    public String list(@RequestParam(required = false) String token, Model model) {
         if (!model.containsAttribute("workspaceJoinForm")) {
-            model.addAttribute("workspaceJoinForm", new WorkspaceJoinForm());
+            WorkspaceJoinForm workspaceJoinForm = new WorkspaceJoinForm();
+            workspaceJoinForm.setToken(token);
+            model.addAttribute("workspaceJoinForm", workspaceJoinForm);
         }
         model.addAttribute("workspaces", workspaceService.getAllForCurrentUser());
         return "workspaces/list";
@@ -62,6 +64,20 @@ public class WorkspaceController {
         workspaceService.leaveWorkspace(id);
         redirectAttributes.addFlashAttribute("successMessage", "Вы покинули workspace");
         return "redirect:/workspaces";
+    }
+
+    @GetMapping("/{id}")
+    public String details(@PathVariable Long id, Model model) {
+        model.addAttribute("workspace", workspaceService.getById(id));
+        model.addAttribute("members", workspaceService.getMembers(id));
+        return "workspaces/details";
+    }
+
+    @GetMapping("/{id}/members")
+    public String members(@PathVariable Long id, Model model) {
+        model.addAttribute("workspace", workspaceService.getById(id));
+        model.addAttribute("members", workspaceService.getMembers(id));
+        return "workspaces/members";
     }
 
     @GetMapping("/create")

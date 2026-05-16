@@ -35,6 +35,10 @@ public class PurchaseItem extends BaseEntity {
     private String description;
 
     @Setter
+    @Column(name = "product_url", length = 1000)
+    private String productUrl;
+
+    @Setter
     @Column(nullable = false)
     private Integer quantity;
 

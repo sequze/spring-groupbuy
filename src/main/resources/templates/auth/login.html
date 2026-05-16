@@ -23,7 +23,7 @@
             <div class="message" th:if="${param.logout}">Вы вышли из системы</div>
             <div class="message" th:if="${param.registered}">Регистрация прошла успешно</div>
 
-            <form th:action="@{/auth/login}" method="post" class="panel" style="padding:24px; margin-top:20px;">
+            <form th:action="@{/auth/login}" method="post" class="auth-form">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
                 <div class="field-full">

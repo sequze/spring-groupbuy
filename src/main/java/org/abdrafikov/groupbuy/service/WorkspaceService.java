@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.abdrafikov.groupbuy.dto.WorkspaceDto;
 import org.abdrafikov.groupbuy.dto.WorkspaceForm;
 import org.abdrafikov.groupbuy.dto.WorkspaceJoinForm;
+import org.abdrafikov.groupbuy.dto.WorkspaceMemberDto;
 import org.abdrafikov.groupbuy.exception.AccessDeniedException;
 import org.abdrafikov.groupbuy.exception.ResourceNotFoundException;
 import org.abdrafikov.groupbuy.model.User;
@@ -147,6 +148,15 @@ public class WorkspaceService {
     }
 
     @Transactional(readOnly = true)
+    public List<WorkspaceMemberDto> getMembers(Long workspaceId) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        Workspace workspace = getAccessibleWorkspace(workspaceId, currentUserId);
+        return workspaceMemberRepository.findByWorkspaceIdOrderByJoinedAtAsc(workspaceId).stream()
+                .map(member -> toMemberDto(member, workspace))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public Workspace getAccessibleWorkspace(Long workspaceId, Long currentUserId) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Workspace не найден"));
@@ -204,6 +214,29 @@ public class WorkspaceService {
                 .currentUserAdmin(isOwner || isWorkspaceAdmin(workspace.getId(), currentUserId))
                 .canLeave(!isOwner)
                 .build();
+    }
+
+    private WorkspaceMemberDto toMemberDto(WorkspaceMember member, Workspace workspace) {
+        User user = member.getUser();
+        User invitedBy = member.getInvitedBy();
+        return WorkspaceMemberDto.builder()
+                .id(member.getId())
+                .userId(user.getId())
+                .displayName(user.getDisplayName())
+                .email(user.getEmail())
+                .role(member.getRole())
+                .roleLabel(toWorkspaceRoleLabel(member.getRole()))
+                .joinedAt(member.getJoinedAt())
+                .invitedByDisplayName(invitedBy == null ? null : invitedBy.getDisplayName())
+                .owner(workspace.getOwner().getId().equals(user.getId()))
+                .build();
+    }
+
+    private String toWorkspaceRoleLabel(WorkspaceRole role) {
+        return switch (role) {
+            case SPACE_ADMIN -> "Админ";
+            case SPACE_MEMBER -> "Участник";
+        };
     }
 
     private void applyForm(Workspace workspace, WorkspaceForm form) {

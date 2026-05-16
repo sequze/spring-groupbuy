@@ -19,30 +19,43 @@
         </nav>
     </header>
 
-    <main class="page-shell">
-        <section class="hero-card">
+    <main class="board-layout">
+        <aside class="board-rail panel">
             <div class="eyebrow">Purchase Items</div>
             <h1 class="page-title">Позиции закупки</h1>
             <p class="page-copy">Выберите позицию, чтобы открыть подробности, комментарии и действия по ней.</p>
+            <div class="metric-card rail-metric">
+                <span class="metric-label">В списке</span>
+                <span class="metric-value" th:text="${#lists.size(purchaseItems)}">0</span>
+                <p class="metric-note">Заявки текущего workspace.</p>
+            </div>
             <div class="hero-actions">
                 <a class="button" th:href="@{/purchase-items/create(workspaceId=${workspaceId})}">Добавить позицию</a>
                 <a class="button-secondary" th:href="@{/workspaces}">Назад к workspaces</a>
             </div>
-        </section>
+        </aside>
 
-        <div class="message" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <section class="page-shell">
+            <div class="message" th:if="${successMessage}" th:text="${successMessage}"></div>
 
-        <section class="panel">
-            <div class="empty-state" th:if="${#lists.isEmpty(purchaseItems)}">Пока нет ни одной позиции закупки. Добавьте первую, чтобы начать обсуждение.</div>
+            <section class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2 class="section-title">Рабочая доска закупок</h2>
+                        <p class="page-copy">Позиции текущего workspace.</p>
+                    </div>
+                </div>
+                <div class="empty-state" th:if="${#lists.isEmpty(purchaseItems)}">Пока нет ни одной позиции закупки. Добавьте первую, чтобы начать обсуждение.</div>
 
-            <div class="list-grid" th:if="${!#lists.isEmpty(purchaseItems)}">
-                <article class="entity-card" th:each="item : ${purchaseItems}">
+                <div class="item-board" th:if="${!#lists.isEmpty(purchaseItems)}">
+                <article class="entity-card item-card" th:each="item : ${purchaseItems}">
                     <div class="entity-head">
                         <div>
                             <h2 class="entity-title">
                                 <a th:href="@{/purchase-items/{id}(id=${item.id})}" th:text="${item.title}">Позиция</a>
                             </h2>
                             <p class="entity-description" th:if="${item.description}" th:text="${item.description}"></p>
+                            <a class="entity-description" th:if="${item.productUrl}" th:href="${item.productUrl}" th:text="${item.productUrl}" target="_blank" rel="noopener noreferrer"></a>
                         </div>
                         <div class="badge-row">
                             <span class="badge" th:text="'ID ' + ${item.id}"></span>
@@ -65,7 +78,7 @@
                         </div>
                     </div>
 
-                    <div class="message" th:if="${item.rejectionReason}" th:text="${'Причина отклонения: ' + item.rejectionReason}" style="margin-top:16px;"></div>
+                    <div class="message section-spacer" th:if="${item.rejectionReason}" th:text="${'Причина отклонения: ' + item.rejectionReason}"></div>
 
                     <div class="card-actions">
                         <a class="button" th:href="@{/purchase-items/{id}(id=${item.id})}">Открыть</a>
@@ -75,8 +88,9 @@
                             <button class="button-danger" type="submit">Удалить</button>
                         </form>
                     </div>
-                </article>
-            </div>
+                    </article>
+                </div>
+            </section>
         </section>
     </main>
 </div>

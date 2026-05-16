@@ -12,6 +12,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
 @Controller
 @RequestMapping("/purchase-items")
 public class PurchaseItemController {
@@ -43,6 +45,7 @@ public class PurchaseItemController {
     public String createPage(@RequestParam Long workspaceId, Model model) {
         model.addAttribute("purchaseItemForm", purchaseItemService.getCreateForm(workspaceId));
         populateForm(model);
+        model.addAttribute("canApproveImmediately", purchaseItemService.canApproveOnCreate(workspaceId));
         model.addAttribute("formAction", "/purchase-items/create");
         model.addAttribute("pageTitle", "Создание позиции закупки");
         return "purchase-items/create";
@@ -57,6 +60,7 @@ public class PurchaseItemController {
     ) {
         if (bindingResult.hasErrors()) {
             populateForm(model);
+            model.addAttribute("canApproveImmediately", canApproveImmediately(form.getWorkspaceId()));
             model.addAttribute("formAction", "/purchase-items/create");
             model.addAttribute("pageTitle", "Создание позиции закупки");
             return "purchase-items/create";
@@ -73,6 +77,7 @@ public class PurchaseItemController {
         model.addAttribute("purchaseItem", purchaseItemService.getById(id));
         model.addAttribute("canModerateStatus", purchaseItemService.canModerateStatus(id));
         populateForm(model);
+        populateEditStatusOptions(model, id);
         model.addAttribute("formAction", "/purchase-items/" + id + "/edit");
         model.addAttribute("pageTitle", "Редактирование позиции закупки");
         return "purchase-items/edit";
@@ -90,6 +95,7 @@ public class PurchaseItemController {
             model.addAttribute("purchaseItem", purchaseItemService.getById(id));
             model.addAttribute("canModerateStatus", purchaseItemService.canModerateStatus(id));
             populateForm(model);
+            populateEditStatusOptions(model, id);
             model.addAttribute("formAction", "/purchase-items/" + id + "/edit");
             model.addAttribute("pageTitle", "Редактирование позиции закупки");
             return "purchase-items/edit";
@@ -110,5 +116,17 @@ public class PurchaseItemController {
     private void populateForm(Model model) {
         model.addAttribute("workspaces", purchaseItemService.getWorkspaceOptions());
         model.addAttribute("statuses", PurchaseItemStatus.values());
+    }
+
+    private void populateEditStatusOptions(Model model, Long id) {
+        if (purchaseItemService.canModerateStatus(id)) {
+            model.addAttribute("editStatuses", List.of(PurchaseItemStatus.NEW, PurchaseItemStatus.APPROVED));
+        } else {
+            model.addAttribute("editStatuses", List.of(PurchaseItemStatus.NEW));
+        }
+    }
+
+    private boolean canApproveImmediately(Long workspaceId) {
+        return workspaceId != null && purchaseItemService.canApproveOnCreate(workspaceId);
     }
 }

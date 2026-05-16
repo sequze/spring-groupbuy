@@ -19,14 +19,23 @@
         </nav>
     </header>
 
-    <main class="page-shell">
-        <section class="hero-card">
+    <main class="profile-layout">
+        <aside class="profile-rail panel">
             <div class="eyebrow">Аккаунт</div>
             <h1 class="page-title">Профиль пользователя</h1>
-            <p class="page-copy">Здесь собраны основные данные текущего пользователя, используемые внутри рабочих пространств и закупок.</p>
-        </section>
+            <p class="page-copy">Основные данные текущего пользователя.</p>
+            <div class="page-actions">
+                <a class="button" th:href="@{/workspaces}">К рабочим пространствам</a>
+            </div>
+        </aside>
 
         <section class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="section-title">Данные учетной записи</h2>
+                    <p class="page-copy">Информация, которая отображается внутри workspace.</p>
+                </div>
+            </div>
             <div class="profile-grid">
                 <dl class="profile-card">
                     <dt>ID</dt>
@@ -40,10 +49,6 @@
                     <dt>Имя</dt>
                     <dd th:text="${displayName}"></dd>
                 </dl>
-            </div>
-
-            <div class="page-actions">
-                <a class="button" th:href="@{/workspaces}">К рабочим пространствам</a>
             </div>
         </section>
     </main>

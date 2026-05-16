@@ -175,6 +175,12 @@ components:
         createdAt:
           type: string
           format: date-time
+        edited:
+          type: boolean
+        canEdit:
+          type: boolean
+        canDelete:
+          type: boolean
     CreateCommentRequest:
       type: object
       required:
