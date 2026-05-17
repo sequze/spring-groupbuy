@@ -1,6 +1,7 @@
 package org.abdrafikov.groupbuy.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.abdrafikov.groupbuy.dto.WorkspaceDto;
 import org.abdrafikov.groupbuy.dto.WorkspaceForm;
 import org.abdrafikov.groupbuy.dto.WorkspaceJoinForm;
@@ -24,6 +25,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class WorkspaceService {
 
     private final WorkspaceRepository workspaceRepository;

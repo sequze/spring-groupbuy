@@ -1,5 +1,6 @@
 package org.abdrafikov.groupbuy.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.abdrafikov.groupbuy.dto.OrderDto;
 import org.abdrafikov.groupbuy.dto.OrderForm;
 import org.abdrafikov.groupbuy.dto.OrderItemDto;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -144,6 +146,16 @@ public class OrderService {
         order.setCreatedBy(currentUser);
         applyCreateForm(order, form, workspace);
         orderRepository.save(order);
+        log.info(
+                "Order created: orderId={}, workspaceId={}, createdByUserId={}, status={}, itemCount={}, totalAmount={}, currency={}",
+                order.getId(),
+                workspace.getId(),
+                currentUser.getId(),
+                order.getStatus(),
+                order.getItems().size(),
+                order.getTotalAmount(),
+                order.getBaseCurrency()
+        );
         return toDto(order, currentUserId);
     }
 

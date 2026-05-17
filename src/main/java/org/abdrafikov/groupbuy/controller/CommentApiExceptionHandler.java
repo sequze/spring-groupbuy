@@ -1,6 +1,7 @@
 package org.abdrafikov.groupbuy.controller;
 
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.abdrafikov.groupbuy.exception.AccessDeniedException;
 import org.abdrafikov.groupbuy.exception.ResourceNotFoundException;
 import org.springframework.core.Ordered;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice(assignableTypes = CommentRestController.class)
+@Slf4j
 public class CommentApiExceptionHandler {
 
     @ExceptionHandler({
@@ -29,6 +31,7 @@ public class CommentApiExceptionHandler {
             HttpMessageNotReadableException.class
     })
     public ResponseEntity<Map<String, String>> handleBadRequest(Exception ex) {
+        log.warn("Comment API bad request: exceptionType={}", ex.getClass().getSimpleName());
         if (ex instanceof MethodArgumentNotValidException validationException) {
             String message = validationException.getBindingResult().getFieldErrors().stream()
                     .map(error -> toValidationMessage(error.getField(), error.getDefaultMessage()))
@@ -63,11 +66,13 @@ public class CommentApiExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) {
+        log.warn("Comment API access denied: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", ex.getMessage()));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(ResourceNotFoundException ex) {
+        log.info("Comment API resource not found: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", ex.getMessage()));
     }
 

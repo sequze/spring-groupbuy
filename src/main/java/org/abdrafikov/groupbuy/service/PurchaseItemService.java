@@ -1,6 +1,7 @@
 package org.abdrafikov.groupbuy.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.abdrafikov.groupbuy.dto.PurchaseItemDto;
 import org.abdrafikov.groupbuy.dto.PurchaseItemForm;
 import org.abdrafikov.groupbuy.dto.WorkspaceDto;
@@ -25,6 +26,7 @@ import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PurchaseItemService {
 
     private final PurchaseItemRepository purchaseItemRepository;
@@ -111,6 +113,13 @@ public class PurchaseItemService {
         item.setAuthor(author);
         applyCreateForm(item, form, author, currentUserId);
         purchaseItemRepository.save(item);
+        log.info(
+                "Purchase item created: itemId={}, workspaceId={}, authorUserId={}, status={}",
+                item.getId(),
+                workspace.getId(),
+                author.getId(),
+                item.getStatus()
+        );
         return toDto(item, currentUserId);
     }
 
@@ -126,6 +135,16 @@ public class PurchaseItemService {
         }
 
         applyEditForm(item, form, getCurrentUserEntity(), currentUserId);
+        if (previousStatus != item.getStatus()) {
+            log.info(
+                    "Purchase item status changed: itemId={}, workspaceId={}, actorUserId={}, from={}, to={}",
+                    item.getId(),
+                    item.getWorkspace().getId(),
+                    currentUserId,
+                    previousStatus,
+                    item.getStatus()
+            );
+        }
         return toDto(item, currentUserId);
     }
 
