@@ -17,6 +17,7 @@ import org.abdrafikov.groupbuy.model.choices.PurchaseItemStatus;
 import org.abdrafikov.groupbuy.repository.OrderRepository;
 import org.abdrafikov.groupbuy.repository.PurchaseItemRepository;
 import org.abdrafikov.groupbuy.repository.UserRepository;
+import org.abdrafikov.groupbuy.service.currency.CurrencyConversionException;
 import org.abdrafikov.groupbuy.service.currency.CurrencyConversionResult;
 import org.abdrafikov.groupbuy.service.currency.CurrencyConversionService;
 import org.springframework.stereotype.Service;
@@ -199,7 +200,7 @@ public class OrderService {
                 .map(item -> toOrderItemDto(item, showCurrentPrice))
                 .toList();
         CurrencyConversionResult currentTotal = showCurrentPrice
-                ? currencyConversionService.convertToBase(order.getTotalAmount(), snapshotCurrency)
+                ? getOptionalCurrentPrice(order.getTotalAmount(), snapshotCurrency)
                 : new CurrencyConversionResult(null, null);
 
         return OrderDto.builder()
@@ -226,7 +227,7 @@ public class OrderService {
                 ? null
                 : item.getPriceSnapshot().multiply(BigDecimal.valueOf(item.getQuantitySnapshot()));
         CurrencyConversionResult currentPrice = showCurrentPrice
-                ? currencyConversionService.convertToBase(item.getPriceSnapshot(), item.getCurrencySnapshot())
+                ? getOptionalCurrentPrice(item.getPriceSnapshot(), item.getCurrencySnapshot())
                 : new CurrencyConversionResult(null, null);
         BigDecimal currentSubtotal = currentPrice.amount() == null
                 ? null
@@ -244,6 +245,14 @@ public class OrderService {
                 .currentCurrency(currentPrice.currency())
                 .currentSubtotal(currentSubtotal)
                 .build();
+    }
+
+    private CurrencyConversionResult getOptionalCurrentPrice(BigDecimal amount, String currency) {
+        try {
+            return currencyConversionService.convertToBase(amount, currency);
+        } catch (CurrencyConversionException ex) {
+            return new CurrencyConversionResult(amount, currency);
+        }
     }
 
     private List<OrderItemForm> buildAvailableItemForms(Long workspaceId, Map<Long, Integer> selectedItems) {
@@ -271,7 +280,7 @@ public class OrderService {
     }
 
     private String formatPriceLabel(PurchaseItem purchaseItem) {
-        CurrencyConversionResult conversion = currencyConversionService.convertToBase(
+        CurrencyConversionResult conversion = getOptionalCurrentPrice(
                 purchaseItem.getPriceAmount(),
                 purchaseItem.getPriceCurrency()
         );
@@ -294,9 +303,10 @@ public class OrderService {
     private void applyCreateForm(Order order, OrderForm form, Workspace workspace) {
         order.setTitle(form.getTitle());
         order.setDescription(form.getDescription());
-        order.setStatus(OrderStatus.DRAFT);
+        OrderStatus status = form.isSubmitImmediately() ? OrderStatus.SUBMITTED : OrderStatus.DRAFT;
+        order.setStatus(status);
         syncOrderItems(order, form, workspace);
-        applyStatusDates(order, OrderStatus.DRAFT);
+        applyStatusDates(order, status);
     }
 
     private void syncOrderItems(Order order, OrderForm form, Workspace workspace) {

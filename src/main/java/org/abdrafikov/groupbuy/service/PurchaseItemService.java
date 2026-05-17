@@ -13,10 +13,12 @@ import org.abdrafikov.groupbuy.model.choices.PurchaseItemStatus;
 import org.abdrafikov.groupbuy.repository.PurchaseItemRepository;
 import org.abdrafikov.groupbuy.repository.UserRepository;
 import org.abdrafikov.groupbuy.service.currency.CurrencyConversionResult;
+import org.abdrafikov.groupbuy.service.currency.CurrencyConversionException;
 import org.abdrafikov.groupbuy.service.currency.CurrencyConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -169,7 +171,7 @@ public class PurchaseItemService {
                 || workspaceService.isWorkspaceAdmin(item.getWorkspace().getId(), currentUserId)
                 || workspaceService.isGlobalAdmin();
         boolean canModerateStatus = canModerateStatus(item, currentUserId);
-        CurrencyConversionResult currentPrice = currencyConversionService.convertToBase(
+        CurrencyConversionResult currentPrice = getCurrentBasePrice(
                 item.getPriceAmount(),
                 item.getPriceCurrency()
         );
@@ -194,6 +196,14 @@ public class PurchaseItemService {
                 .canModerateStatus(canModerateStatus)
                 .canDelete(canEdit)
                 .build();
+    }
+
+    private CurrencyConversionResult getCurrentBasePrice(BigDecimal amount, String currency) {
+        try {
+            return currencyConversionService.convertToBase(amount, currency);
+        } catch (CurrencyConversionException ex) {
+            return new CurrencyConversionResult(amount, currency);
+        }
     }
 
     private void applyCreateForm(PurchaseItem item, PurchaseItemForm form, User actingUser, Long currentUserId) {

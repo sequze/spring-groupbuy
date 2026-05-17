@@ -108,7 +108,7 @@
                     </div>
 
                     <div class="field-full" th:if="${purchaseItem}">
-                        <p class="muted" th:if="${purchaseItem.basePriceAmount}" th:text="'Текущая базовая цена: ' + ${purchaseItem.basePriceAmount} + ' ' + (${purchaseItem.baseCurrency} ?: '')"></p>
+                        <p class="muted" th:if="${purchaseItem.basePriceAmount != null}" th:text="'Текущая базовая цена: ' + ${purchaseItem.basePriceAmount} + ' ' + (${purchaseItem.baseCurrency} ?: '')"></p>
                         <p class="muted" th:if="${purchaseItem.basePriceAmount == null}">Текущая базовая цена не указана.</p>
                     </div>
 

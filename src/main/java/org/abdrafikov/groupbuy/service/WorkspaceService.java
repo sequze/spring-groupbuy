@@ -5,6 +5,7 @@ import org.abdrafikov.groupbuy.dto.WorkspaceDto;
 import org.abdrafikov.groupbuy.dto.WorkspaceForm;
 import org.abdrafikov.groupbuy.dto.WorkspaceJoinForm;
 import org.abdrafikov.groupbuy.dto.WorkspaceMemberDto;
+import org.abdrafikov.groupbuy.dto.WorkspaceMemberRoleForm;
 import org.abdrafikov.groupbuy.exception.AccessDeniedException;
 import org.abdrafikov.groupbuy.exception.ResourceNotFoundException;
 import org.abdrafikov.groupbuy.model.User;
@@ -113,7 +114,7 @@ public class WorkspaceService {
     public WorkspaceDto update(Long id, WorkspaceForm form) {
         Long currentUserId = currentUserService.getCurrentUserId();
         Workspace workspace = getAccessibleWorkspace(id, currentUserId);
-        ensureWorkspaceAdmin(workspace.getId(), currentUserId);
+        ensureWorkspaceAdmin(workspace, currentUserId);
 
         applyForm(workspace, form);
         return toDto(workspace, currentUserId);
@@ -133,7 +134,7 @@ public class WorkspaceService {
     public WorkspaceForm getForm(Long id) {
         Long currentUserId = currentUserService.getCurrentUserId();
         Workspace workspace = getAccessibleWorkspace(id, currentUserId);
-        ensureWorkspaceAdmin(workspace.getId(), currentUserId);
+        ensureWorkspaceAdmin(workspace, currentUserId);
 
         WorkspaceForm form = new WorkspaceForm();
         form.setName(workspace.getName());
@@ -152,8 +153,41 @@ public class WorkspaceService {
         Long currentUserId = currentUserService.getCurrentUserId();
         Workspace workspace = getAccessibleWorkspace(workspaceId, currentUserId);
         return workspaceMemberRepository.findByWorkspaceIdOrderByJoinedAtAsc(workspaceId).stream()
-                .map(member -> toMemberDto(member, workspace))
+                .map(member -> toMemberDto(member, workspace, currentUserId))
                 .toList();
+    }
+
+    @Transactional
+    public void updateMemberRole(Long workspaceId, Long memberId, WorkspaceMemberRoleForm form) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        Workspace workspace = getAccessibleWorkspace(workspaceId, currentUserId);
+        ensureWorkspaceAdmin(workspace, currentUserId);
+
+        WorkspaceMember member = getWorkspaceMemberForManagement(workspaceId, memberId);
+        if (workspace.getOwner().getId().equals(member.getUser().getId())) {
+            throw new AccessDeniedException("Роль владельца workspace нельзя изменить");
+        }
+        ensureCanManageAdminMember(workspace, currentUserId, member, "Менять роль администратора может только владелец workspace");
+
+        member.setRole(form.getRole());
+    }
+
+    @Transactional
+    public void removeMember(Long workspaceId, Long memberId) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        Workspace workspace = getAccessibleWorkspace(workspaceId, currentUserId);
+        ensureWorkspaceAdmin(workspace, currentUserId);
+
+        WorkspaceMember member = getWorkspaceMemberForManagement(workspaceId, memberId);
+        if (workspace.getOwner().getId().equals(member.getUser().getId())) {
+            throw new AccessDeniedException("Владельца workspace нельзя удалить из участников");
+        }
+        if (member.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("Для выхода из workspace используйте действие «Покинуть»");
+        }
+        ensureCanManageAdminMember(workspace, currentUserId, member, "Удалять администратора может только владелец workspace");
+
+        workspaceMemberRepository.delete(member);
     }
 
     @Transactional(readOnly = true)
@@ -170,10 +204,19 @@ public class WorkspaceService {
 
     @Transactional(readOnly = true)
     public void ensureWorkspaceAdmin(Long workspaceId, Long currentUserId) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace не найден"));
+        ensureWorkspaceAdmin(workspace, currentUserId);
+    }
+
+    private void ensureWorkspaceAdmin(Workspace workspace, Long currentUserId) {
         if (isGlobalAdmin()) {
             return;
         }
-        WorkspaceMember membership = workspaceMemberRepository.findByWorkspaceIdAndUserId(workspaceId, currentUserId)
+        if (workspace.getOwner().getId().equals(currentUserId)) {
+            return;
+        }
+        WorkspaceMember membership = workspaceMemberRepository.findByWorkspaceIdAndUserId(workspace.getId(), currentUserId)
                 .orElseThrow(() -> new AccessDeniedException("Нет доступа к workspace"));
         if (membership.getRole() != WorkspaceRole.SPACE_ADMIN) {
             throw new AccessDeniedException("Недостаточно прав для изменения workspace");
@@ -183,6 +226,11 @@ public class WorkspaceService {
     @Transactional(readOnly = true)
     public boolean isWorkspaceAdmin(Long workspaceId, Long currentUserId) {
         if (isGlobalAdmin()) {
+            return true;
+        }
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace не найден"));
+        if (workspace.getOwner().getId().equals(currentUserId)) {
             return true;
         }
         return workspaceMemberRepository.findByWorkspaceIdAndUserId(workspaceId, currentUserId)
@@ -201,6 +249,27 @@ public class WorkspaceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Текущий пользователь не найден"));
     }
 
+    private WorkspaceMember getWorkspaceMemberForManagement(Long workspaceId, Long memberId) {
+        WorkspaceMember member = workspaceMemberRepository.findById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("Участник workspace не найден"));
+        if (!member.getWorkspace().getId().equals(workspaceId)) {
+            throw new ResourceNotFoundException("Участник workspace не найден");
+        }
+        return member;
+    }
+
+    private void ensureCanManageAdminMember(
+            Workspace workspace,
+            Long currentUserId,
+            WorkspaceMember member,
+            String message
+    ) {
+        boolean currentUserOwner = workspace.getOwner().getId().equals(currentUserId);
+        if (!currentUserOwner && member.getRole() == WorkspaceRole.SPACE_ADMIN) {
+            throw new AccessDeniedException(message);
+        }
+    }
+
     private WorkspaceDto toDto(Workspace workspace, Long currentUserId) {
         boolean isOwner = workspace.getOwner().getId().equals(currentUserId);
         return WorkspaceDto.builder()
@@ -216,9 +285,16 @@ public class WorkspaceService {
                 .build();
     }
 
-    private WorkspaceMemberDto toMemberDto(WorkspaceMember member, Workspace workspace) {
+    private WorkspaceMemberDto toMemberDto(WorkspaceMember member, Workspace workspace, Long currentUserId) {
         User user = member.getUser();
         User invitedBy = member.getInvitedBy();
+        boolean isOwner = workspace.getOwner().getId().equals(user.getId());
+        boolean currentUserCanManage = isWorkspaceAdmin(workspace.getId(), currentUserId);
+        boolean currentUserOwner = workspace.getOwner().getId().equals(currentUserId);
+        boolean protectedAdmin = member.getRole() == WorkspaceRole.SPACE_ADMIN && !currentUserOwner;
+        boolean self = user.getId().equals(currentUserId);
+        boolean canManageRole = currentUserCanManage && !isOwner && !protectedAdmin;
+        boolean canRemove = canManageRole && !self;
         return WorkspaceMemberDto.builder()
                 .id(member.getId())
                 .userId(user.getId())
@@ -228,7 +304,9 @@ public class WorkspaceService {
                 .roleLabel(toWorkspaceRoleLabel(member.getRole()))
                 .joinedAt(member.getJoinedAt())
                 .invitedByDisplayName(invitedBy == null ? null : invitedBy.getDisplayName())
-                .owner(workspace.getOwner().getId().equals(user.getId()))
+                .owner(isOwner)
+                .canManageRole(canManageRole)
+                .canRemove(canRemove)
                 .build();
     }
 

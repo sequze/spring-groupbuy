@@ -63,12 +63,12 @@
                     </div>
                     <div class="detail-param">
                         <strong>Исходная цена</strong>
-                        <span th:if="${purchaseItem.priceAmount}" th:text="${purchaseItem.priceAmount} + ' ' + (${purchaseItem.priceCurrency} ?: '')"></span>
+                        <span th:if="${purchaseItem.priceAmount != null}" th:text="${purchaseItem.priceAmount} + ' ' + (${purchaseItem.priceCurrency} ?: '')"></span>
                         <span th:if="${purchaseItem.priceAmount == null}">Не указана</span>
                     </div>
                     <div class="detail-param">
                         <strong>Базовая цена</strong>
-                        <span th:if="${purchaseItem.basePriceAmount}" th:text="${purchaseItem.basePriceAmount} + ' ' + (${purchaseItem.baseCurrency} ?: '')"></span>
+                        <span th:if="${purchaseItem.basePriceAmount != null}" th:text="${purchaseItem.basePriceAmount} + ' ' + (${purchaseItem.baseCurrency} ?: '')"></span>
                         <span th:if="${purchaseItem.basePriceAmount == null}">Не указана</span>
                     </div>
                     <div class="detail-param detail-param-wide" th:if="${purchaseItem.productUrl}">

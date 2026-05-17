@@ -43,9 +43,13 @@
             <div class="panel-header">
                 <div>
                     <h2 class="section-title">Состав workspace</h2>
-                    <p class="page-copy">Участники и их роли.</p>
+                    <p class="page-copy" th:if="${workspace.currentUserAdmin}">Участники, роли и административные действия.</p>
+                    <p class="page-copy" th:if="${!workspace.currentUserAdmin}">Участники и их роли.</p>
                 </div>
             </div>
+
+            <div class="message" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-error" th:if="${memberErrorMessage}" th:text="${memberErrorMessage}"></div>
 
             <div class="empty-state" th:if="${#lists.isEmpty(members)}">В workspace пока нет участников.</div>
 
@@ -58,6 +62,7 @@
                         <th>Роль</th>
                         <th>Присоединился</th>
                         <th>Пригласил</th>
+                        <th th:if="${workspace.currentUserAdmin}">Управление</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -74,6 +79,30 @@
                         </td>
                         <td th:text="${#temporals.format(member.joinedAt, 'dd.MM.yyyy HH:mm')}">date</td>
                         <td th:text="${member.invitedByDisplayName ?: '-'}">-</td>
+                        <td th:if="${workspace.currentUserAdmin}">
+                            <div class="member-actions" th:if="${member.canManageRole}">
+                                <form class="member-role-form"
+                                      th:action="@{/workspaces/{workspaceId}/members/{memberId}/role(workspaceId=${workspace.id},memberId=${member.id})}"
+                                      method="post">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <select name="role" aria-label="Роль участника">
+                                        <option th:each="role : ${workspaceRoles}"
+                                                th:value="${role}"
+                                                th:selected="${role == member.role}"
+                                                th:text="${role.name() == 'SPACE_ADMIN' ? 'Админ' : 'Участник'}">Роль</option>
+                                    </select>
+                                    <button class="button-secondary" type="submit">Сохранить</button>
+                                </form>
+                                <form class="ghost-form"
+                                      th:action="@{/workspaces/{workspaceId}/members/{memberId}/remove(workspaceId=${workspace.id},memberId=${member.id})}"
+                                      method="post">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <button class="button-danger" th:if="${member.canRemove}" type="submit">Удалить</button>
+                                </form>
+                            </div>
+                            <span class="metric-note" th:if="${member.owner}">Владелец защищен</span>
+                            <span class="metric-note" th:if="${!member.owner && !member.canManageRole}">Управляет владелец</span>
+                        </td>
                     </tr>
                     </tbody>
                 </table>

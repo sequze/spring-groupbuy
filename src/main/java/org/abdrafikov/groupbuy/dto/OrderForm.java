@@ -27,5 +27,7 @@ public class OrderForm {
     @NotNull(message = "Статус обязателен")
     private OrderStatus status = OrderStatus.DRAFT;
 
+    private boolean submitImmediately;
+
     private List<OrderItemForm> items = new ArrayList<>();
 }

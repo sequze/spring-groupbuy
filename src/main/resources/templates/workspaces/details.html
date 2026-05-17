@@ -110,7 +110,9 @@
                     <h2 class="section-title">Участники</h2>
                     <p class="page-copy">Состав workspace и роли пользователей.</p>
                 </div>
-                <a class="button-secondary" th:href="@{/workspaces/{id}/members(id=${workspace.id})}">Управление</a>
+                <a class="button-secondary"
+                   th:href="@{/workspaces/{id}/members(id=${workspace.id})}"
+                   th:text="${workspace.currentUserAdmin ? 'Управление' : 'Участники'}">Управление</a>
             </div>
 
             <div class="empty-state" th:if="${#lists.isEmpty(members)}">В workspace пока нет участников.</div>

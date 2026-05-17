@@ -19,4 +19,6 @@ public class WorkspaceMemberDto {
     private final LocalDateTime joinedAt;
     private final String invitedByDisplayName;
     private final boolean owner;
+    private final boolean canManageRole;
+    private final boolean canRemove;
 }

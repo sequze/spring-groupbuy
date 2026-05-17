@@ -440,7 +440,8 @@ select {
 .field-full input,
 .field-full textarea,
 .field-full select,
-table input {
+table input,
+table select {
     width: 100%;
     border: 1px solid var(--line-strong);
     border-radius: var(--radius);
@@ -467,7 +468,8 @@ table input {
 .field-full input:focus,
 .field-full textarea:focus,
 .field-full select:focus,
-table input:focus {
+table input:focus,
+table select:focus {
     border-color: var(--blue);
     box-shadow: 0 0 0 4px rgba(39, 84, 197, 0.13);
 }
@@ -587,6 +589,19 @@ tbody tr:hover {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.member-actions,
+.member-role-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.member-role-form select {
+    min-width: 150px;
 }
 
 .dashboard-layout > .hero-card,

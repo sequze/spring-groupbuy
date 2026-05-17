@@ -64,7 +64,7 @@
                             <strong>Сумма</strong>
                             <span th:text="${order.totalAmount} + ' ' + ${order.currency}"></span>
                             <span class="muted"
-                                  th:if="${order.currentTotalAmount}"
+                                  th:if="${order.currentTotalAmount != null}"
                                   th:text="'Текущая оценка: ' + ${order.currentTotalAmount} + ' ' + ${order.currentCurrency}"></span>
                         </div>
                         <div class="data-point">
@@ -93,13 +93,13 @@
                                 <td>
                                     <div th:text="${item.price} + ' ' + ${item.currency}"></div>
                                     <div class="muted"
-                                         th:if="${item.currentPrice}"
+                                         th:if="${item.currentPrice != null}"
                                          th:text="${item.currentPrice} + ' ' + ${item.currentCurrency}"></div>
                                 </td>
                                 <td>
                                     <div th:text="${item.subtotal} + ' ' + ${item.currency}"></div>
                                     <div class="muted"
-                                         th:if="${item.currentSubtotal}"
+                                         th:if="${item.currentSubtotal != null}"
                                          th:text="${item.currentSubtotal} + ' ' + ${item.currentCurrency}"></div>
                                 </td>
                             </tr>

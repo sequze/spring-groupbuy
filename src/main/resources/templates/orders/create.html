@@ -43,11 +43,11 @@
                     </div>
 
                     <div class="field-full">
-                        <label>Начальный статус</label>
-                        <div class="checkbox-field">
-                            <span class="badge badge-accent">DRAFT</span>
-                            <span>При создании заказ всегда получает статус draft</span>
-                        </div>
+                        <label for="submitImmediately">Модерация</label>
+                        <label class="checkbox-field" for="submitImmediately">
+                            <input id="submitImmediately" type="checkbox" th:field="*{submitImmediately}">
+                            <span>Утвердить сразу</span>
+                        </label>
                     </div>
 
                     <div class="field-full">

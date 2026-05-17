@@ -1,13 +1,31 @@
 services:
+  app:
+    build:
+      context: .
+    image: spring-groupbuy-app:latest
+    container_name: groupbuy-app
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PG_DATABASE}
+      SPRING_DATASOURCE_USERNAME: ${PG_USER}
+      SPRING_DATASOURCE_PASSWORD: ${PG_PASSWORD}
+      GROUPBUY_CURRENCY_BASE: ${GROUPBUY_CURRENCY_BASE}
+
+    ports:
+      - "${APP_PORT}:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   postgres:
     image: postgres:18
     container_name: groupbuy-postgres
-    restart: unless-stopped
 
     environment:
-      POSTGRES_DB: groupbuy
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${PG_DATABASE}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
 
     ports:
       - "5432:5432"
@@ -16,7 +34,7 @@ services:
       - postgres_data:/var/lib/postgresql/18/data
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER} -d ${PG_DATABASE}"]
       interval: 5s
       timeout: 5s
       retries: 5

@@ -3,8 +3,10 @@ package org.abdrafikov.groupbuy.controller;
 import jakarta.validation.Valid;
 import org.abdrafikov.groupbuy.dto.WorkspaceForm;
 import org.abdrafikov.groupbuy.dto.WorkspaceJoinForm;
+import org.abdrafikov.groupbuy.dto.WorkspaceMemberRoleForm;
 import org.abdrafikov.groupbuy.exception.AccessDeniedException;
 import org.abdrafikov.groupbuy.exception.ResourceNotFoundException;
+import org.abdrafikov.groupbuy.model.choices.WorkspaceRole;
 import org.abdrafikov.groupbuy.service.WorkspaceService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -77,7 +79,47 @@ public class WorkspaceController {
     public String members(@PathVariable Long id, Model model) {
         model.addAttribute("workspace", workspaceService.getById(id));
         model.addAttribute("members", workspaceService.getMembers(id));
+        model.addAttribute("workspaceRoles", WorkspaceRole.values());
         return "workspaces/members";
+    }
+
+    @PostMapping("/{workspaceId}/members/{memberId}/role")
+    public String updateMemberRole(
+            @PathVariable Long workspaceId,
+            @PathVariable Long memberId,
+            @Valid @ModelAttribute("memberRoleForm") WorkspaceMemberRoleForm form,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("memberErrorMessage", "Выберите корректную роль участника");
+            return "redirect:/workspaces/" + workspaceId + "/members";
+        }
+
+        try {
+            workspaceService.updateMemberRole(workspaceId, memberId, form);
+            redirectAttributes.addFlashAttribute("successMessage", "Роль участника обновлена");
+        } catch (ResourceNotFoundException | AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("memberErrorMessage", ex.getMessage());
+        }
+
+        return "redirect:/workspaces/" + workspaceId + "/members";
+    }
+
+    @PostMapping("/{workspaceId}/members/{memberId}/remove")
+    public String removeMember(
+            @PathVariable Long workspaceId,
+            @PathVariable Long memberId,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            workspaceService.removeMember(workspaceId, memberId);
+            redirectAttributes.addFlashAttribute("successMessage", "Участник удален из workspace");
+        } catch (ResourceNotFoundException | AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("memberErrorMessage", ex.getMessage());
+        }
+
+        return "redirect:/workspaces/" + workspaceId + "/members";
     }
 
     @GetMapping("/create")
