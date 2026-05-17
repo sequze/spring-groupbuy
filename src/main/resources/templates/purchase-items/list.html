@@ -73,8 +73,14 @@
                             <span th:text="${item.quantity} + ' ' + (${item.unit} ?: '')"></span>
                         </div>
                         <div class="data-point">
-                            <strong>Цена</strong>
-                            <span th:text="${item.priceAmount} + ' ' + (${item.priceCurrency} ?: '')"></span>
+                            <strong>Исходная цена</strong>
+                            <span th:if="${item.priceAmount}" th:text="${item.priceAmount} + ' ' + (${item.priceCurrency} ?: '')"></span>
+                            <span th:if="${item.priceAmount == null}">Не указана</span>
+                        </div>
+                        <div class="data-point">
+                            <strong>Базовая цена</strong>
+                            <span th:if="${item.basePriceAmount}" th:text="${item.basePriceAmount} + ' ' + (${item.baseCurrency} ?: '')"></span>
+                            <span th:if="${item.basePriceAmount == null}">Не указана</span>
                         </div>
                     </div>
 
@@ -90,6 +96,9 @@
                     </div>
                     </article>
                 </div>
+                <p class="muted section-spacer">
+                    <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Rates By Exchange Rate API</a>
+                </p>
             </section>
         </section>
     </main>
