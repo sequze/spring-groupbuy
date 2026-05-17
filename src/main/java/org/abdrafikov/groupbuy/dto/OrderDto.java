@@ -20,6 +20,8 @@ public class OrderDto {
     private final OrderStatus status;
     private final BigDecimal totalAmount;
     private final String currency;
+    private final BigDecimal currentTotalAmount;
+    private final String currentCurrency;
     private final int itemCount;
     private final List<OrderItemDto> items;
     private final boolean canEdit;

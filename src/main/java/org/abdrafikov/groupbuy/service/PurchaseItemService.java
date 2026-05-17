@@ -169,6 +169,10 @@ public class PurchaseItemService {
                 || workspaceService.isWorkspaceAdmin(item.getWorkspace().getId(), currentUserId)
                 || workspaceService.isGlobalAdmin();
         boolean canModerateStatus = canModerateStatus(item, currentUserId);
+        CurrencyConversionResult currentPrice = currencyConversionService.convertToBase(
+                item.getPriceAmount(),
+                item.getPriceCurrency()
+        );
 
         return PurchaseItemDto.builder()
                 .id(item.getId())
@@ -182,8 +186,8 @@ public class PurchaseItemService {
                 .unit(item.getUnit())
                 .priceAmount(item.getPriceAmount())
                 .priceCurrency(item.getPriceCurrency())
-                .basePriceAmount(item.getBasePriceAmount())
-                .baseCurrency(item.getBaseCurrency())
+                .basePriceAmount(currentPrice.amount())
+                .baseCurrency(currentPrice.currency())
                 .status(item.getStatus())
                 .rejectionReason(item.getRejectionReason())
                 .canEdit(canEdit)
@@ -200,7 +204,6 @@ public class PurchaseItemService {
         item.setUnit(form.getUnit());
         item.setPriceAmount(form.getPriceAmount());
         item.setPriceCurrency(normalizeCurrency(form.getPriceCurrency()));
-        applyBasePrice(item);
         item.setRejectionReason(null);
         item.setRejectedAt(null);
         item.setRejectedBy(null);
@@ -228,7 +231,6 @@ public class PurchaseItemService {
         item.setUnit(form.getUnit());
         item.setPriceAmount(form.getPriceAmount());
         item.setPriceCurrency(normalizeCurrency(form.getPriceCurrency()));
-        applyBasePrice(item);
 
         PurchaseItemStatus nextStatus = PurchaseItemStatus.NEW;
         if (canModerateStatus(item, currentUserId)) {
@@ -270,15 +272,6 @@ public class PurchaseItemService {
             return null;
         }
         return rejectionReason.trim();
-    }
-
-    private void applyBasePrice(PurchaseItem item) {
-        CurrencyConversionResult conversion = currencyConversionService.convertToBase(
-                item.getPriceAmount(),
-                item.getPriceCurrency()
-        );
-        item.setBasePriceAmount(conversion.amount());
-        item.setBaseCurrency(conversion.currency());
     }
 
     private String normalizeCurrency(String currency) {

@@ -6,6 +6,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -19,22 +20,24 @@ class HttpExchangeRateClientTest {
     void readsTargetCurrencyRate() {
         RestTemplate restTemplate = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
-        HttpExchangeRateClient client = new HttpExchangeRateClient(restTemplate, "https://open.er-api.com/v6");
+        HttpExchangeRateClient client = new HttpExchangeRateClient(restTemplate, "https://v6.exchangerate-api.com/v6", "test-token");
 
-        server.expect(requestTo("https://open.er-api.com/v6/latest/USD"))
+        server.expect(requestTo("https://v6.exchangerate-api.com/v6/test-token/latest/EUR"))
                 .andRespond(withSuccess("""
                         {
                           "result": "success",
-                          "base_code": "USD",
-                          "rates": {
-                            "RUB": 91.23
+                          "base_code": "EUR",
+                          "conversion_rates": {
+                            "USD": 1.1,
+                            "RUB": 100
                           }
                         }
                         """, MediaType.APPLICATION_JSON));
 
-        BigDecimal rate = client.getRate("USD", "RUB");
+        Map<String, BigDecimal> rates = client.getRates("eur");
 
-        assertThat(rate).isEqualByComparingTo("91.23");
+        assertThat(rates.get("USD")).isEqualByComparingTo("1.1");
+        assertThat(rates.get("RUB")).isEqualByComparingTo("100");
         server.verify();
     }
 
@@ -42,12 +45,12 @@ class HttpExchangeRateClientTest {
     void wrapsExternalApiFailure() {
         RestTemplate restTemplate = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
-        HttpExchangeRateClient client = new HttpExchangeRateClient(restTemplate, "https://open.er-api.com/v6");
+        HttpExchangeRateClient client = new HttpExchangeRateClient(restTemplate, "https://v6.exchangerate-api.com/v6", "test-token");
 
-        server.expect(requestTo("https://open.er-api.com/v6/latest/USD"))
+        server.expect(requestTo("https://v6.exchangerate-api.com/v6/test-token/latest/EUR"))
                 .andRespond(withServerError());
 
-        assertThatThrownBy(() -> client.getRate("USD", "RUB"))
+        assertThatThrownBy(() -> client.getRates("EUR"))
                 .isInstanceOf(CurrencyConversionException.class)
                 .hasMessageContaining("временно недоступен");
         server.verify();

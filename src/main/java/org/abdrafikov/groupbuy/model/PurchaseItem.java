@@ -55,14 +55,6 @@ public class PurchaseItem extends BaseEntity {
     private String priceCurrency;
 
     @Setter
-    @Column(name = "base_price_amount", precision = 12, scale = 2)
-    private BigDecimal basePriceAmount;
-
-    @Setter
-    @Column(name = "base_currency", nullable = false, length = 3)
-    private String baseCurrency;
-
-    @Setter
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private PurchaseItemStatus status = PurchaseItemStatus.NEW;

@@ -1,8 +1,9 @@
 package org.abdrafikov.groupbuy.service.currency;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 public interface ExchangeRateClient {
 
-    BigDecimal getRate(String sourceCurrency, String targetCurrency);
+    Map<String, BigDecimal> getRates(String baseCurrency);
 }

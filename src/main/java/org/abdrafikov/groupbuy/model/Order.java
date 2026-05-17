@@ -44,8 +44,8 @@ public class Order extends BaseEntity {
     private BigDecimal totalAmount;
 
     @Setter
-    @Column(nullable = false, length = 3)
-    private String currency;
+    @Column(name = "base_currency", nullable = false, length = 3)
+    private String baseCurrency;
 
     @Setter
     @Column(name = "submitted_at")
