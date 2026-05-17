@@ -88,6 +88,10 @@
                         <input id="priceCurrency" type="text" th:field="*{priceCurrency}" placeholder="RUB">
                         <div class="error-text" th:errors="*{priceCurrency}"></div>
                     </div>
+
+                    <div class="field-full">
+                        <p class="muted">Базовая цена будет рассчитана в валюте приложения при сохранении.</p>
+                    </div>
                 </div>
 
                 <div class="page-actions">

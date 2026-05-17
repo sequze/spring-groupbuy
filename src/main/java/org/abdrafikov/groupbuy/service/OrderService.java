@@ -17,6 +17,8 @@ import org.abdrafikov.groupbuy.model.choices.PurchaseItemStatus;
 import org.abdrafikov.groupbuy.repository.OrderRepository;
 import org.abdrafikov.groupbuy.repository.PurchaseItemRepository;
 import org.abdrafikov.groupbuy.repository.UserRepository;
+import org.abdrafikov.groupbuy.service.currency.CurrencyConversionResult;
+import org.abdrafikov.groupbuy.service.currency.CurrencyConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,19 +38,22 @@ public class OrderService {
     private final UserRepository userRepository;
     private final WorkspaceService workspaceService;
     private final CurrentUserService currentUserService;
+    private final CurrencyConversionService currencyConversionService;
 
     public OrderService(
             OrderRepository orderRepository,
             PurchaseItemRepository purchaseItemRepository,
             UserRepository userRepository,
             WorkspaceService workspaceService,
-            CurrentUserService currentUserService
+            CurrentUserService currentUserService,
+            CurrencyConversionService currencyConversionService
     ) {
         this.orderRepository = orderRepository;
         this.purchaseItemRepository = purchaseItemRepository;
         this.userRepository = userRepository;
         this.workspaceService = workspaceService;
         this.currentUserService = currentUserService;
+        this.currencyConversionService = currencyConversionService;
     }
 
     @Transactional(readOnly = true)
@@ -185,18 +190,17 @@ public class OrderService {
         boolean canManage = workspaceService.isWorkspaceAdmin(order.getWorkspace().getId(), currentUserId)
                 || workspaceService.isGlobalAdmin();
 
+        String snapshotCurrency = order.getBaseCurrency();
+        boolean showCurrentPrice = snapshotCurrency != null
+                && !currencyConversionService.getBaseCurrency().equalsIgnoreCase(snapshotCurrency);
+
         List<OrderItemDto> items = order.getItems().stream()
                 .sorted(Comparator.comparing(OrderItem::getItemTitleSnapshot))
-                .map(item -> OrderItemDto.builder()
-                        .purchaseItemId(item.getPurchaseItem().getId())
-                        .title(item.getItemTitleSnapshot())
-                        .quantity(item.getQuantitySnapshot())
-                        .unit(item.getPurchaseItem().getUnit())
-                        .price(item.getPriceSnapshot())
-                        .currency(item.getCurrencySnapshot())
-                        .subtotal(item.getPriceSnapshot() == null ? null : item.getPriceSnapshot().multiply(BigDecimal.valueOf(item.getQuantitySnapshot())))
-                        .build())
+                .map(item -> toOrderItemDto(item, showCurrentPrice))
                 .toList();
+        CurrencyConversionResult currentTotal = showCurrentPrice
+                ? currencyConversionService.convertToBase(order.getTotalAmount(), snapshotCurrency)
+                : new CurrencyConversionResult(null, null);
 
         return OrderDto.builder()
                 .id(order.getId())
@@ -207,11 +211,38 @@ public class OrderService {
                 .description(order.getDescription())
                 .status(order.getStatus())
                 .totalAmount(order.getTotalAmount())
-                .currency(order.getCurrency())
+                .currency(snapshotCurrency)
+                .currentTotalAmount(currentTotal.amount())
+                .currentCurrency(currentTotal.currency())
                 .itemCount(items.size())
                 .items(items)
                 .canEdit(canManage)
                 .canDelete(canManage)
+                .build();
+    }
+
+    private OrderItemDto toOrderItemDto(OrderItem item, boolean showCurrentPrice) {
+        BigDecimal subtotal = item.getPriceSnapshot() == null
+                ? null
+                : item.getPriceSnapshot().multiply(BigDecimal.valueOf(item.getQuantitySnapshot()));
+        CurrencyConversionResult currentPrice = showCurrentPrice
+                ? currencyConversionService.convertToBase(item.getPriceSnapshot(), item.getCurrencySnapshot())
+                : new CurrencyConversionResult(null, null);
+        BigDecimal currentSubtotal = currentPrice.amount() == null
+                ? null
+                : currentPrice.amount().multiply(BigDecimal.valueOf(item.getQuantitySnapshot()));
+
+        return OrderItemDto.builder()
+                .purchaseItemId(item.getPurchaseItem().getId())
+                .title(item.getItemTitleSnapshot())
+                .quantity(item.getQuantitySnapshot())
+                .unit(item.getPurchaseItem().getUnit())
+                .price(item.getPriceSnapshot())
+                .currency(item.getCurrencySnapshot())
+                .subtotal(subtotal)
+                .currentPrice(currentPrice.amount())
+                .currentCurrency(currentPrice.currency())
+                .currentSubtotal(currentSubtotal)
                 .build();
     }
 
@@ -240,8 +271,12 @@ public class OrderService {
     }
 
     private String formatPriceLabel(PurchaseItem purchaseItem) {
-        BigDecimal price = purchaseItem.getBasePriceAmount() != null ? purchaseItem.getBasePriceAmount() : purchaseItem.getPriceAmount();
-        String currency = purchaseItem.getBaseCurrency() != null ? purchaseItem.getBaseCurrency() : purchaseItem.getPriceCurrency();
+        CurrencyConversionResult conversion = currencyConversionService.convertToBase(
+                purchaseItem.getPriceAmount(),
+                purchaseItem.getPriceCurrency()
+        );
+        BigDecimal price = conversion.amount();
+        String currency = conversion.currency();
         if (price == null) {
             return "Цена не указана";
         }
@@ -279,7 +314,7 @@ public class OrderService {
 
         order.getItems().clear();
         BigDecimal total = BigDecimal.ZERO;
-        String currency = null;
+        String currency = currencyConversionService.getBaseCurrency();
 
         for (OrderItemForm itemForm : selectedForms) {
             PurchaseItem purchaseItem = workspaceItems.get(itemForm.getPurchaseItemId());
@@ -292,15 +327,14 @@ public class OrderService {
                 throw new IllegalArgumentException("Количество для выбранных позиций должно быть больше 0");
             }
 
-            BigDecimal price = purchaseItem.getBasePriceAmount() != null ? purchaseItem.getBasePriceAmount() : purchaseItem.getPriceAmount();
-            String itemCurrency = purchaseItem.getBaseCurrency() != null ? purchaseItem.getBaseCurrency() : purchaseItem.getPriceCurrency();
+            CurrencyConversionResult conversion = currencyConversionService.convertToBase(
+                    purchaseItem.getPriceAmount(),
+                    purchaseItem.getPriceCurrency()
+            );
+            BigDecimal price = conversion.amount();
+            String itemCurrency = conversion.currency();
             if (price == null || itemCurrency == null || itemCurrency.isBlank()) {
                 throw new IllegalArgumentException("У всех позиций заказа должна быть указана цена и валюта");
-            }
-            if (currency == null) {
-                currency = itemCurrency.toUpperCase();
-            } else if (!currency.equalsIgnoreCase(itemCurrency)) {
-                throw new IllegalArgumentException("Все позиции заказа должны быть в одной валюте");
             }
 
             OrderItem orderItem = new OrderItem();
@@ -309,14 +343,14 @@ public class OrderService {
             orderItem.setItemTitleSnapshot(purchaseItem.getTitle());
             orderItem.setQuantitySnapshot(quantity);
             orderItem.setPriceSnapshot(price);
-            orderItem.setCurrencySnapshot(currency);
+            orderItem.setCurrencySnapshot(itemCurrency);
             order.getItems().add(orderItem);
 
             total = total.add(price.multiply(BigDecimal.valueOf(quantity.longValue())));
         }
 
         order.setTotalAmount(total);
-        order.setCurrency(currency);
+        order.setBaseCurrency(currency);
     }
 
     private void applyStatusDates(Order order, OrderStatus status) {

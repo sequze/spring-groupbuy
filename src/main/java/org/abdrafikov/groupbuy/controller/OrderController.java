@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.abdrafikov.groupbuy.dto.OrderForm;
 import org.abdrafikov.groupbuy.model.choices.OrderStatus;
 import org.abdrafikov.groupbuy.service.OrderService;
+import org.abdrafikov.groupbuy.service.currency.CurrencyConversionException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -53,7 +54,7 @@ public class OrderController {
 
         try {
             orderService.create(form);
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | CurrencyConversionException ex) {
             bindingResult.reject("orderItems", ex.getMessage());
             populateForm(model, form);
             model.addAttribute("formAction", "/orders/create");
@@ -97,7 +98,7 @@ public class OrderController {
 
         try {
             orderService.update(id, form);
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | CurrencyConversionException ex) {
             bindingResult.reject("orderItems", ex.getMessage());
             model.addAttribute("order", orderService.getById(id));
             populateForm(model, form);

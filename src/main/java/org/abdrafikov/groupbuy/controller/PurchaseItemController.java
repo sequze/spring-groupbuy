@@ -67,7 +67,16 @@ public class PurchaseItemController {
             return "purchase-items/create";
         }
 
-        purchaseItemService.create(form);
+        try {
+            purchaseItemService.create(form);
+        } catch (CurrencyConversionException ex) {
+            bindingResult.rejectValue("priceCurrency", "currency.conversion", ex.getMessage());
+            populateForm(model);
+            model.addAttribute("canApproveImmediately", canApproveImmediately(form.getWorkspaceId()));
+            model.addAttribute("formAction", "/purchase-items/create");
+            model.addAttribute("pageTitle", "Создание позиции закупки");
+            return "purchase-items/create";
+        }
         redirectAttributes.addFlashAttribute("successMessage", "Позиция закупки создана");
         return "redirect:/purchase-items?workspaceId=" + form.getWorkspaceId();
     }
@@ -102,7 +111,18 @@ public class PurchaseItemController {
             return "purchase-items/edit";
         }
 
-        purchaseItemService.update(id, form);
+        try {
+            purchaseItemService.update(id, form);
+        } catch (CurrencyConversionException ex) {
+            bindingResult.rejectValue("priceCurrency", "currency.conversion", ex.getMessage());
+            model.addAttribute("purchaseItem", purchaseItemService.getById(id));
+            model.addAttribute("canModerateStatus", purchaseItemService.canModerateStatus(id));
+            populateForm(model);
+            populateEditStatusOptions(model, id);
+            model.addAttribute("formAction", "/purchase-items/" + id + "/edit");
+            model.addAttribute("pageTitle", "Редактирование позиции закупки");
+            return "purchase-items/edit";
+        }
         redirectAttributes.addFlashAttribute("successMessage", "Позиция закупки обновлена");
         return "redirect:/purchase-items/" + id;
     }

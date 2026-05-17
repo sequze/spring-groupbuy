@@ -63,6 +63,9 @@
                         <div class="data-point">
                             <strong>Сумма</strong>
                             <span th:text="${order.totalAmount} + ' ' + ${order.currency}"></span>
+                            <span class="muted"
+                                  th:if="${order.currentTotalAmount}"
+                                  th:text="'Текущая оценка: ' + ${order.currentTotalAmount} + ' ' + ${order.currentCurrency}"></span>
                         </div>
                         <div class="data-point">
                             <strong>Позиций</strong>
@@ -87,8 +90,18 @@
                                     <div class="muted" th:if="${item.unit}" th:text="'Единица: ' + ${item.unit}"></div>
                                 </td>
                                 <td th:text="${item.quantity}"></td>
-                                <td th:text="${item.price} + ' ' + ${item.currency}"></td>
-                                <td th:text="${item.subtotal} + ' ' + ${item.currency}"></td>
+                                <td>
+                                    <div th:text="${item.price} + ' ' + ${item.currency}"></div>
+                                    <div class="muted"
+                                         th:if="${item.currentPrice}"
+                                         th:text="${item.currentPrice} + ' ' + ${item.currentCurrency}"></div>
+                                </td>
+                                <td>
+                                    <div th:text="${item.subtotal} + ' ' + ${item.currency}"></div>
+                                    <div class="muted"
+                                         th:if="${item.currentSubtotal}"
+                                         th:text="${item.currentSubtotal} + ' ' + ${item.currentCurrency}"></div>
+                                </td>
                             </tr>
                             </tbody>
                         </table>

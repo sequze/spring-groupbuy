@@ -16,4 +16,7 @@ public class OrderItemDto {
     private final BigDecimal price;
     private final String currency;
     private final BigDecimal subtotal;
+    private final BigDecimal currentPrice;
+    private final String currentCurrency;
+    private final BigDecimal currentSubtotal;
 }

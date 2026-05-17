@@ -21,6 +21,8 @@ public class PurchaseItemDto {
     private final String unit;
     private final BigDecimal priceAmount;
     private final String priceCurrency;
+    private final BigDecimal basePriceAmount;
+    private final String baseCurrency;
     private final PurchaseItemStatus status;
     private final String rejectionReason;
     private final boolean canEdit;

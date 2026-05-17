@@ -12,11 +12,14 @@ import org.abdrafikov.groupbuy.model.Workspace;
 import org.abdrafikov.groupbuy.model.choices.PurchaseItemStatus;
 import org.abdrafikov.groupbuy.repository.PurchaseItemRepository;
 import org.abdrafikov.groupbuy.repository.UserRepository;
+import org.abdrafikov.groupbuy.service.currency.CurrencyConversionResult;
+import org.abdrafikov.groupbuy.service.currency.CurrencyConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class PurchaseItemService {
     private final UserRepository userRepository;
     private final WorkspaceService workspaceService;
     private final CurrentUserService currentUserService;
+    private final CurrencyConversionService currencyConversionService;
 
     @Transactional(readOnly = true)
     public List<PurchaseItemDto> getByWorkspace(Long workspaceId) {
@@ -165,6 +169,10 @@ public class PurchaseItemService {
                 || workspaceService.isWorkspaceAdmin(item.getWorkspace().getId(), currentUserId)
                 || workspaceService.isGlobalAdmin();
         boolean canModerateStatus = canModerateStatus(item, currentUserId);
+        CurrencyConversionResult currentPrice = currencyConversionService.convertToBase(
+                item.getPriceAmount(),
+                item.getPriceCurrency()
+        );
 
         return PurchaseItemDto.builder()
                 .id(item.getId())
@@ -178,6 +186,8 @@ public class PurchaseItemService {
                 .unit(item.getUnit())
                 .priceAmount(item.getPriceAmount())
                 .priceCurrency(item.getPriceCurrency())
+                .basePriceAmount(currentPrice.amount())
+                .baseCurrency(currentPrice.currency())
                 .status(item.getStatus())
                 .rejectionReason(item.getRejectionReason())
                 .canEdit(canEdit)
@@ -193,9 +203,7 @@ public class PurchaseItemService {
         item.setQuantity(form.getQuantity());
         item.setUnit(form.getUnit());
         item.setPriceAmount(form.getPriceAmount());
-        item.setPriceCurrency(form.getPriceCurrency() == null ? null : form.getPriceCurrency().toUpperCase());
-        item.setBasePriceAmount(form.getPriceAmount());
-        item.setBaseCurrency(form.getPriceCurrency() == null ? "RUB" : form.getPriceCurrency().toUpperCase());
+        item.setPriceCurrency(normalizeCurrency(form.getPriceCurrency()));
         item.setRejectionReason(null);
         item.setRejectedAt(null);
         item.setRejectedBy(null);
@@ -222,19 +230,14 @@ public class PurchaseItemService {
         item.setQuantity(form.getQuantity());
         item.setUnit(form.getUnit());
         item.setPriceAmount(form.getPriceAmount());
-        item.setPriceCurrency(form.getPriceCurrency() == null ? null : form.getPriceCurrency().toUpperCase());
-        item.setBasePriceAmount(form.getPriceAmount());
-        item.setBaseCurrency(form.getPriceCurrency() == null ? "RUB" : form.getPriceCurrency().toUpperCase());
+        item.setPriceCurrency(normalizeCurrency(form.getPriceCurrency()));
 
         PurchaseItemStatus nextStatus = PurchaseItemStatus.NEW;
         if (canModerateStatus(item, currentUserId)) {
-            nextStatus = form.getStatus() == PurchaseItemStatus.APPROVED
-                    ? PurchaseItemStatus.APPROVED
-                    : PurchaseItemStatus.NEW;
+            nextStatus = form.getStatus();
         }
 
         item.setStatus(nextStatus);
-        item.setRejectionReason(null);
 
         if (nextStatus == PurchaseItemStatus.APPROVED) {
             item.setApprovedAt(LocalDateTime.now());
@@ -271,4 +274,10 @@ public class PurchaseItemService {
         return rejectionReason.trim();
     }
 
+    private String normalizeCurrency(String currency) {
+        if (currency == null || currency.isBlank()) {
+            return null;
+        }
+        return currency.trim().toUpperCase(Locale.ROOT);
+    }
 }

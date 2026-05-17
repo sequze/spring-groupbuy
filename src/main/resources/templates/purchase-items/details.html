@@ -62,14 +62,23 @@
                         <span th:text="${purchaseItem.quantity} + ' ' + (${purchaseItem.unit} ?: '')"></span>
                     </div>
                     <div class="detail-param">
-                        <strong>Цена</strong>
-                        <span th:text="${purchaseItem.priceAmount} + ' ' + (${purchaseItem.priceCurrency} ?: '')"></span>
+                        <strong>Исходная цена</strong>
+                        <span th:if="${purchaseItem.priceAmount}" th:text="${purchaseItem.priceAmount} + ' ' + (${purchaseItem.priceCurrency} ?: '')"></span>
+                        <span th:if="${purchaseItem.priceAmount == null}">Не указана</span>
+                    </div>
+                    <div class="detail-param">
+                        <strong>Базовая цена</strong>
+                        <span th:if="${purchaseItem.basePriceAmount}" th:text="${purchaseItem.basePriceAmount} + ' ' + (${purchaseItem.baseCurrency} ?: '')"></span>
+                        <span th:if="${purchaseItem.basePriceAmount == null}">Не указана</span>
                     </div>
                     <div class="detail-param detail-param-wide" th:if="${purchaseItem.productUrl}">
                         <strong>Ссылка на товар</strong>
                         <a th:href="${purchaseItem.productUrl}" th:text="${purchaseItem.productUrl}" target="_blank" rel="noopener noreferrer"></a>
                     </div>
                 </div>
+                <p class="muted section-spacer">
+                    <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Rates By Exchange Rate API</a>
+                </p>
 
                 <div class="message section-spacer" th:if="${purchaseItem.rejectionReason}" th:text="${'Причина отклонения: ' + purchaseItem.rejectionReason}"></div>
             </article>
