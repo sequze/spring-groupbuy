@@ -242,6 +242,12 @@ public class PurchaseItemService {
             item.setRejectedAt(null);
             item.setRejectedBy(null);
             item.setRejectionReason(null);
+        } else if (nextStatus == PurchaseItemStatus.REJECTED) {
+            item.setApprovedAt(null);
+            item.setApprovedBy(null);
+            item.setRejectedAt(LocalDateTime.now());
+            item.setRejectedBy(actingUser);
+            item.setRejectionReason(normalizeRejectionReason(form.getRejectionReason()));
         } else {
             item.setApprovedAt(null);
             item.setApprovedBy(null);
@@ -257,4 +263,12 @@ public class PurchaseItemService {
         }
         return productUrl.trim();
     }
+
+    private String normalizeRejectionReason(String rejectionReason) {
+        if (rejectionReason == null || rejectionReason.isBlank()) {
+            return null;
+        }
+        return rejectionReason.trim();
+    }
+
 }

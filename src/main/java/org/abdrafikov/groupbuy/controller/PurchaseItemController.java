@@ -6,6 +6,7 @@ import org.abdrafikov.groupbuy.dto.PurchaseItemForm;
 import org.abdrafikov.groupbuy.model.choices.PurchaseItemStatus;
 import org.abdrafikov.groupbuy.service.CommentService;
 import org.abdrafikov.groupbuy.service.PurchaseItemService;
+import org.abdrafikov.groupbuy.service.currency.CurrencyConversionException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -120,7 +121,11 @@ public class PurchaseItemController {
 
     private void populateEditStatusOptions(Model model, Long id) {
         if (purchaseItemService.canModerateStatus(id)) {
-            model.addAttribute("editStatuses", List.of(PurchaseItemStatus.NEW, PurchaseItemStatus.APPROVED));
+            model.addAttribute("editStatuses", List.of(
+                    PurchaseItemStatus.NEW,
+                    PurchaseItemStatus.APPROVED,
+                    PurchaseItemStatus.REJECTED
+            ));
         } else {
             model.addAttribute("editStatuses", List.of(PurchaseItemStatus.NEW));
         }

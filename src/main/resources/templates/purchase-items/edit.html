@@ -50,6 +50,12 @@
                         <div class="error-text" th:errors="*{status}"></div>
                     </div>
 
+                    <div class="field-full" th:if="${canModerateStatus}">
+                        <label for="rejectionReason">Причина отклонения</label>
+                        <textarea id="rejectionReason" th:field="*{rejectionReason}" rows="3" placeholder="Заполните, если выбираете статус REJECTED"></textarea>
+                        <div class="error-text" th:errors="*{rejectionReason}"></div>
+                    </div>
+
                     <div class="field" th:if="${!canModerateStatus}">
                         <label>Статус</label>
                         <input type="hidden" name="status" value="NEW">
@@ -99,6 +105,11 @@
                         <label for="priceCurrency">Валюта</label>
                         <input id="priceCurrency" type="text" th:field="*{priceCurrency}">
                         <div class="error-text" th:errors="*{priceCurrency}"></div>
+                    </div>
+
+                    <div class="field-full" th:if="${purchaseItem}">
+                        <p class="muted" th:if="${purchaseItem.basePriceAmount}" th:text="'Текущая базовая цена: ' + ${purchaseItem.basePriceAmount} + ' ' + (${purchaseItem.baseCurrency} ?: '')"></p>
+                        <p class="muted" th:if="${purchaseItem.basePriceAmount == null}">Текущая базовая цена не указана.</p>
                     </div>
 
                 </div>
