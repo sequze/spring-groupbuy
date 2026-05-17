@@ -45,7 +45,29 @@
                         <p class="page-copy">Позиции текущего workspace.</p>
                     </div>
                 </div>
-                <div class="empty-state" th:if="${#lists.isEmpty(purchaseItems)}">Пока нет ни одной позиции закупки. Добавьте первую, чтобы начать обсуждение.</div>
+                <form class="form-grid section-spacer" th:action="@{/purchase-items}" method="get">
+                    <input type="hidden" name="workspaceId" th:value="${workspaceId}">
+                    <div class="field">
+                        <label for="q">Поиск по названию</label>
+                        <input id="q" name="q" type="search" th:value="${searchQuery}" placeholder="Например, бумага">
+                    </div>
+                    <div class="field">
+                        <label for="status">Статус</label>
+                        <select id="status" name="status">
+                            <option value="" th:selected="${selectedStatus == null}">Все статусы</option>
+                            <option th:each="status : ${statuses}"
+                                    th:value="${status}"
+                                    th:text="${status}"
+                                    th:selected="${status == selectedStatus}">NEW</option>
+                        </select>
+                    </div>
+                    <div class="form-actions field-full">
+                        <button class="button" type="submit">Применить</button>
+                        <a class="button-secondary" th:href="@{/purchase-items(workspaceId=${workspaceId})}">Сбросить</a>
+                    </div>
+                </form>
+
+                <div class="empty-state" th:if="${#lists.isEmpty(purchaseItems)}">По выбранным фильтрам позиций нет.</div>
 
                 <div class="item-board" th:if="${!#lists.isEmpty(purchaseItems)}">
                 <article class="entity-card item-card" th:each="item : ${purchaseItems}">

@@ -28,9 +28,17 @@ public class PurchaseItemController {
     }
 
     @GetMapping
-    public String list(@RequestParam Long workspaceId, Model model) {
+    public String list(
+            @RequestParam Long workspaceId,
+            @RequestParam(required = false) PurchaseItemStatus status,
+            @RequestParam(required = false) String q,
+            Model model
+    ) {
         model.addAttribute("workspaceId", workspaceId);
-        model.addAttribute("purchaseItems", purchaseItemService.getByWorkspace(workspaceId));
+        model.addAttribute("selectedStatus", status);
+        model.addAttribute("searchQuery", q);
+        model.addAttribute("statuses", PurchaseItemStatus.values());
+        model.addAttribute("purchaseItems", purchaseItemService.getByWorkspace(workspaceId, status, q));
         return "purchase-items/list";
     }
 

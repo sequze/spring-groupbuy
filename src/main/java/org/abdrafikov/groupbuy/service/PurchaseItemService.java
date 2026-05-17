@@ -37,9 +37,17 @@ public class PurchaseItemService {
 
     @Transactional(readOnly = true)
     public List<PurchaseItemDto> getByWorkspace(Long workspaceId) {
+        return getByWorkspace(workspaceId, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PurchaseItemDto> getByWorkspace(Long workspaceId, PurchaseItemStatus status, String titleQuery) {
         Long currentUserId = currentUserService.getCurrentUserId();
         workspaceService.getAccessibleWorkspace(workspaceId, currentUserId);
-        return purchaseItemRepository.findByWorkspaceIdOrderByCreatedAtDesc(workspaceId).stream()
+        List<PurchaseItem> items = hasFilters(status, titleQuery)
+                ? purchaseItemRepository.search(workspaceId, status, titleQuery)
+                : purchaseItemRepository.findByWorkspaceIdOrderByCreatedAtDesc(workspaceId);
+        return items.stream()
                 .map(item -> toDto(item, currentUserId))
                 .toList();
     }
@@ -128,6 +136,7 @@ public class PurchaseItemService {
         Long currentUserId = currentUserService.getCurrentUserId();
         PurchaseItem item = getAccessibleItem(id, currentUserId);
         ensureCanEditContent(item, currentUserId);
+        PurchaseItemStatus previousStatus = item.getStatus();
 
         if (!item.getWorkspace().getId().equals(form.getWorkspaceId())) {
             Workspace newWorkspace = workspaceService.getAccessibleWorkspace(form.getWorkspaceId(), currentUserId);
@@ -223,6 +232,10 @@ public class PurchaseItemService {
         } catch (CurrencyConversionException ex) {
             return new CurrencyConversionResult(amount, currency);
         }
+    }
+
+    private boolean hasFilters(PurchaseItemStatus status, String titleQuery) {
+        return status != null || (titleQuery != null && !titleQuery.isBlank());
     }
 
     private void applyCreateForm(PurchaseItem item, PurchaseItemForm form, User actingUser, Long currentUserId) {

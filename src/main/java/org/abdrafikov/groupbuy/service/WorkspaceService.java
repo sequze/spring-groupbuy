@@ -64,6 +64,7 @@ public class WorkspaceService {
         member.setRole(WorkspaceRole.SPACE_ADMIN);
         workspaceMemberRepository.save(member);
 
+        log.info("Workspace created: workspaceId={}, ownerUserId={}", savedWorkspace.getId(), currentUser.getId());
         return toDto(savedWorkspace, currentUser.getId());
     }
 
