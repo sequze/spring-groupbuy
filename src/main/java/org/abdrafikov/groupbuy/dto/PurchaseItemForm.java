@@ -4,6 +4,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,6 +26,10 @@ public class PurchaseItemForm {
     @Size(max = 2000, message = "Описание должно быть не длиннее 2000 символов")
     private String description;
 
+    @Pattern(regexp = "^\\s*$|\\s*https?://.+\\s*$", message = "Ссылка на товар должна начинаться с http:// или https://")
+    @Size(max = 1000, message = "Ссылка на товар должна быть не длиннее 1000 символов")
+    private String productUrl;
+
     @NotNull(message = "Количество обязательно")
     @Min(value = 1, message = "Количество должно быть больше 0")
     private Integer quantity;
@@ -40,6 +45,8 @@ public class PurchaseItemForm {
 
     @NotNull(message = "Статус обязателен")
     private PurchaseItemStatus status = PurchaseItemStatus.NEW;
+
+    private boolean approveImmediately;
 
     @Size(max = 1000, message = "Причина отклонения должна быть не длиннее 1000 символов")
     private String rejectionReason;

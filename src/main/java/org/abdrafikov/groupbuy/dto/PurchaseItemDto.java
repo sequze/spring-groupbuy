@@ -16,6 +16,7 @@ public class PurchaseItemDto {
     private final String authorDisplayName;
     private final String title;
     private final String description;
+    private final String productUrl;
     private final Integer quantity;
     private final String unit;
     private final BigDecimal priceAmount;

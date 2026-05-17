@@ -19,14 +19,14 @@
         </nav>
     </header>
 
-    <main class="page-shell">
-        <section class="hero-card">
+    <main class="editor-layout">
+        <aside class="editor-aside panel">
             <div class="eyebrow">Workspace</div>
             <h1 class="page-title" th:text="${pageTitle}">Создание workspace</h1>
             <p class="page-copy">Задайте рабочему пространству ясное название и короткое описание, чтобы участники сразу понимали контекст закупок.</p>
-        </section>
+        </aside>
 
-        <section class="panel">
+        <section class="panel editor-panel">
             <form th:action="${formAction}" th:object="${workspaceForm}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 

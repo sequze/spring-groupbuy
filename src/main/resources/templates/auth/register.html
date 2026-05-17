@@ -19,7 +19,7 @@
             <h2 class="page-title">Новый пользователь</h2>
             <p class="page-copy">Заполните базовые данные. После регистрации можно сразу создать первый workspace.</p>
 
-            <form th:action="@{/auth/register}" th:object="${registerRequest}" method="post" class="panel" style="padding:24px; margin-top:20px;">
+            <form th:action="@{/auth/register}" th:object="${registerRequest}" method="post" class="auth-form">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
                 <div class="field-full">

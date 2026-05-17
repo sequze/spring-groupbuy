@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -56,6 +55,14 @@ public class PurchaseItemService {
     }
 
     @Transactional(readOnly = true)
+    public boolean canApproveOnCreate(Long workspaceId) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        workspaceService.getAccessibleWorkspace(workspaceId, currentUserId);
+        return workspaceService.isGlobalAdmin()
+                || workspaceService.isWorkspaceAdmin(workspaceId, currentUserId);
+    }
+
+    @Transactional(readOnly = true)
     public PurchaseItemForm getEditForm(Long id) {
         Long currentUserId = currentUserService.getCurrentUserId();
         PurchaseItem item = getAccessibleItem(id, currentUserId);
@@ -65,6 +72,7 @@ public class PurchaseItemService {
         form.setWorkspaceId(item.getWorkspace().getId());
         form.setTitle(item.getTitle());
         form.setDescription(item.getDescription());
+        form.setProductUrl(item.getProductUrl());
         form.setQuantity(item.getQuantity());
         form.setUnit(item.getUnit());
         form.setPriceAmount(item.getPriceAmount());
@@ -95,7 +103,7 @@ public class PurchaseItemService {
         PurchaseItem item = new PurchaseItem();
         item.setWorkspace(workspace);
         item.setAuthor(author);
-        applyCreateForm(item, form);
+        applyCreateForm(item, form, author, currentUserId);
         purchaseItemRepository.save(item);
         return toDto(item, currentUserId);
     }
@@ -165,6 +173,7 @@ public class PurchaseItemService {
                 .authorDisplayName(item.getAuthor().getDisplayName())
                 .title(item.getTitle())
                 .description(item.getDescription())
+                .productUrl(item.getProductUrl())
                 .quantity(item.getQuantity())
                 .unit(item.getUnit())
                 .priceAmount(item.getPriceAmount())
@@ -177,26 +186,39 @@ public class PurchaseItemService {
                 .build();
     }
 
-    private void applyCreateForm(PurchaseItem item, PurchaseItemForm form) {
+    private void applyCreateForm(PurchaseItem item, PurchaseItemForm form, User actingUser, Long currentUserId) {
         item.setTitle(form.getTitle());
         item.setDescription(form.getDescription());
+        item.setProductUrl(normalizeProductUrl(form.getProductUrl()));
         item.setQuantity(form.getQuantity());
         item.setUnit(form.getUnit());
         item.setPriceAmount(form.getPriceAmount());
         item.setPriceCurrency(form.getPriceCurrency() == null ? null : form.getPriceCurrency().toUpperCase());
         item.setBasePriceAmount(form.getPriceAmount());
         item.setBaseCurrency(form.getPriceCurrency() == null ? "RUB" : form.getPriceCurrency().toUpperCase());
-        item.setStatus(PurchaseItemStatus.NEW);
         item.setRejectionReason(null);
-        item.setApprovedAt(null);
-        item.setApprovedBy(null);
         item.setRejectedAt(null);
         item.setRejectedBy(null);
+
+        if (form.isApproveImmediately()) {
+            if (!canModerateStatus(item, currentUserId)) {
+                throw new AccessDeniedException("Сразу утверждать позицию может только администратор workspace");
+            }
+            item.setStatus(PurchaseItemStatus.APPROVED);
+            item.setApprovedAt(LocalDateTime.now());
+            item.setApprovedBy(actingUser);
+            return;
+        }
+
+        item.setStatus(PurchaseItemStatus.NEW);
+        item.setApprovedAt(null);
+        item.setApprovedBy(null);
     }
 
     private void applyEditForm(PurchaseItem item, PurchaseItemForm form, User actingUser, Long currentUserId) {
         item.setTitle(form.getTitle());
         item.setDescription(form.getDescription());
+        item.setProductUrl(normalizeProductUrl(form.getProductUrl()));
         item.setQuantity(form.getQuantity());
         item.setUnit(form.getUnit());
         item.setPriceAmount(form.getPriceAmount());
@@ -204,30 +226,28 @@ public class PurchaseItemService {
         item.setBasePriceAmount(form.getPriceAmount());
         item.setBaseCurrency(form.getPriceCurrency() == null ? "RUB" : form.getPriceCurrency().toUpperCase());
 
-        if (!canModerateStatus(item, currentUserId)) {
-            if (form.getStatus() != item.getStatus()) {
-                throw new AccessDeniedException("Менять статус позиции может только администратор workspace");
-            }
-            if (!Objects.equals(form.getRejectionReason(), item.getRejectionReason())) {
-                throw new AccessDeniedException("Менять причину отклонения может только администратор workspace");
-            }
-            return;
+        PurchaseItemStatus nextStatus = PurchaseItemStatus.NEW;
+        if (canModerateStatus(item, currentUserId)) {
+            nextStatus = form.getStatus() == PurchaseItemStatus.APPROVED
+                    ? PurchaseItemStatus.APPROVED
+                    : PurchaseItemStatus.NEW;
         }
 
-        item.setStatus(form.getStatus());
-        item.setRejectionReason(form.getRejectionReason());
+        item.setStatus(nextStatus);
+        item.setRejectionReason(null);
 
-        if (form.getStatus() == PurchaseItemStatus.APPROVED) {
+        if (nextStatus == PurchaseItemStatus.APPROVED) {
             item.setApprovedAt(LocalDateTime.now());
             item.setApprovedBy(actingUser);
             item.setRejectedAt(null);
             item.setRejectedBy(null);
             item.setRejectionReason(null);
-        } else if (form.getStatus() == PurchaseItemStatus.REJECTED) {
-            item.setRejectedAt(LocalDateTime.now());
-            item.setRejectedBy(actingUser);
+        } else if (nextStatus == PurchaseItemStatus.REJECTED) {
             item.setApprovedAt(null);
             item.setApprovedBy(null);
+            item.setRejectedAt(LocalDateTime.now());
+            item.setRejectedBy(actingUser);
+            item.setRejectionReason(normalizeRejectionReason(form.getRejectionReason()));
         } else {
             item.setApprovedAt(null);
             item.setApprovedBy(null);
@@ -236,4 +256,19 @@ public class PurchaseItemService {
             item.setRejectionReason(null);
         }
     }
+
+    private String normalizeProductUrl(String productUrl) {
+        if (productUrl == null || productUrl.isBlank()) {
+            return null;
+        }
+        return productUrl.trim();
+    }
+
+    private String normalizeRejectionReason(String rejectionReason) {
+        if (rejectionReason == null || rejectionReason.isBlank()) {
+            return null;
+        }
+        return rejectionReason.trim();
+    }
+
 }

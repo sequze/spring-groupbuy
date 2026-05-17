@@ -63,6 +63,9 @@ public class CommentRestController implements CommentsApi {
         dto.setAuthorDisplayName(comment.getAuthorDisplayName());
         dto.setContent(comment.getContent());
         dto.setCreatedAt(comment.getCreatedAt().atZone(ZoneId.systemDefault()).toOffsetDateTime());
+        dto.setEdited(comment.isEdited());
+        dto.setCanEdit(comment.isCanEdit());
+        dto.setCanDelete(comment.isCanDelete());
         return dto;
     }
 }

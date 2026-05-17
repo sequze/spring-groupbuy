@@ -20,14 +20,21 @@
     </header>
 
     <main class="page-shell">
-        <section class="hero-card">
-            <div class="eyebrow">Orders</div>
-            <h1 class="page-title">Заказы workspace</h1>
-            <p class="page-copy">Каждый заказ собирается из approved-позиций пространства, а итоговая сумма рассчитывается по выбранным строкам заказа.</p>
-            <div class="hero-actions">
-                <a class="button" th:href="@{/orders/create(workspaceId=${workspaceId})}">Создать заказ</a>
-                <a class="button-secondary" th:href="@{/workspaces}">Назад к workspaces</a>
-            </div>
+        <section class="analytics-hero">
+            <article class="hero-card analytics-copy">
+                <div class="eyebrow">Orders</div>
+                <h1 class="page-title">Заказы workspace</h1>
+                <p class="page-copy">Заказы собираются из approved-позиций workspace.</p>
+                <div class="hero-actions">
+                    <a class="button" th:href="@{/orders/create(workspaceId=${workspaceId})}">Создать заказ</a>
+                    <a class="button-secondary" th:href="@{/workspaces}">Назад к workspaces</a>
+                </div>
+            </article>
+            <aside class="finance-tile panel">
+                <span class="metric-label">Заказов</span>
+                <span class="metric-value" th:text="${#lists.size(orders)}">0</span>
+                <p class="metric-note">Сводка текущего workspace.</p>
+            </aside>
         </section>
 
         <div class="message" th:if="${successMessage}" th:text="${successMessage}"></div>
@@ -35,8 +42,8 @@
         <section class="panel">
             <div class="empty-state" th:if="${#lists.isEmpty(orders)}">Заказов пока нет. Создайте первый из approved-позиций этого workspace.</div>
 
-            <div class="list-grid" th:if="${!#lists.isEmpty(orders)}">
-                <article class="entity-card" th:each="order : ${orders}">
+            <div class="order-ledger" th:if="${!#lists.isEmpty(orders)}">
+                <article class="entity-card order-card" th:each="order : ${orders}">
                     <div class="entity-head">
                         <div>
                             <h2 class="entity-title" th:text="${order.title}">Заказ</h2>
@@ -63,7 +70,7 @@
                         </div>
                     </div>
 
-                    <div class="table-wrap" th:if="${!#lists.isEmpty(order.items)}" style="margin-top:16px;">
+                    <div class="table-wrap section-spacer" th:if="${!#lists.isEmpty(order.items)}">
                         <table>
                             <thead>
                             <tr>
