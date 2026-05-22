@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Вход</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
-</head>
+<head th:replace="~{fragments/layout :: head('Вход')}"></head>
 <body>
 <main class="auth-shell">
     <section class="auth-card">
@@ -19,8 +14,8 @@
             <h2 class="page-title">Вход в систему</h2>
             <p class="page-copy">Используйте email и пароль, чтобы перейти к своим рабочим пространствам.</p>
 
-            <div class="alert alert-error" th:if="${param.error}">Неверный email или пароль</div>
             <div class="message" th:if="${param.logout}">Вы вышли из системы</div>
+            <div class="alert alert-error" th:if="${param.error}">Неверный email или пароль</div>
             <div class="message" th:if="${param.registered}">Регистрация прошла успешно</div>
 
             <form th:action="@{/auth/login}" method="post" class="auth-form">

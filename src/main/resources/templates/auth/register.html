@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Регистрация</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
-</head>
+<head th:replace="~{fragments/layout :: head('Регистрация')}"></head>
 <body>
 <main class="auth-shell">
     <section class="auth-card">
@@ -25,19 +20,19 @@
                 <div class="field-full">
                     <label for="email">Email</label>
                     <input id="email" type="email" th:field="*{email}" placeholder="name@company.com">
-                    <div class="error-text" th:errors="*{email}"></div>
+                    <th:block th:replace="~{fragments/forms :: fieldError('email')}"></th:block>
                 </div>
 
                 <div class="field-full">
                     <label for="displayName">Имя</label>
                     <input id="displayName" type="text" th:field="*{displayName}" placeholder="Например, Амир">
-                    <div class="error-text" th:errors="*{displayName}"></div>
+                    <th:block th:replace="~{fragments/forms :: fieldError('displayName')}"></th:block>
                 </div>
 
                 <div class="field-full">
                     <label for="password">Пароль</label>
                     <input id="password" type="password" th:field="*{password}" placeholder="Минимум 6 символов">
-                    <div class="error-text" th:errors="*{password}"></div>
+                    <th:block th:replace="~{fragments/forms :: fieldError('password')}"></th:block>
                 </div>
 
                 <div class="page-actions">

@@ -1,23 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Профиль</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
-</head>
+<head th:replace="~{fragments/layout :: head('Профиль')}"></head>
 <body>
 <div class="shell">
-    <header class="topbar">
-        <a class="brand" th:href="@{/workspaces}">
-            <span class="brand-mark">GB</span>
-            <span>GroupBuy</span>
-        </a>
-        <nav class="nav">
-            <a class="nav-link" th:href="@{/workspaces}">Workspaces</a>
-            <a class="nav-link" th:href="@{/profile}">Профиль</a>
-        </nav>
-    </header>
+    <header th:replace="~{fragments/layout :: topbar('profile', ${null})}"></header>
 
     <main class="profile-layout">
         <aside class="profile-rail panel">

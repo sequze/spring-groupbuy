@@ -1,23 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Заказы</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
-</head>
+<head th:replace="~{fragments/layout :: head('Заказы')}"></head>
 <body>
 <div class="shell">
-    <header class="topbar">
-        <a class="brand" th:href="@{/workspaces}">
-            <span class="brand-mark">GB</span>
-            <span>GroupBuy</span>
-        </a>
-        <nav class="nav">
-            <a class="nav-link" th:href="@{/purchase-items(workspaceId=${workspaceId})}">Позиции</a>
-            <a class="nav-link" th:href="@{/workspaces}">Workspaces</a>
-        </nav>
-    </header>
+    <header th:replace="~{fragments/layout :: topbar('orders', ${workspaceId})}"></header>
 
     <main class="page-shell">
         <section class="analytics-hero">
@@ -37,7 +23,7 @@
             </aside>
         </section>
 
-        <div class="message" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <th:block th:replace="~{fragments/messages :: flash(${successMessage}, ${null})}"></th:block>
 
         <section class="panel">
             <div class="empty-state" th:if="${#lists.isEmpty(orders)}">Заказов пока нет. Создайте первый из approved-позиций этого workspace.</div>

@@ -1,0 +1,87 @@
+@media (max-width: 980px) {
+    .dashboard-layout,
+    .profile-layout,
+    .board-layout,
+    .detail-layout,
+    .detail-sections,
+    .analytics-hero,
+    .editor-layout,
+    .auth-card {
+        grid-template-columns: 1fr;
+    }
+
+    .purchase-item-header {
+        grid-template-columns: 1fr;
+    }
+
+    .purchase-item-header .hero-actions {
+        justify-content: flex-start;
+    }
+
+    .comment-side,
+    .comment-actions {
+        justify-items: start;
+        justify-content: flex-start;
+    }
+
+    .dashboard-side,
+    .sticky-panel,
+    .detail-summary,
+    .editor-aside {
+        position: static;
+    }
+
+    .workspace-grid,
+    .profile-grid,
+    .data-grid,
+    .detail-params,
+    .quick-link-grid,
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-visual {
+        min-height: 360px;
+    }
+}
+
+@media (max-width: 720px) {
+    .shell {
+        width: calc(100% - 20px);
+        padding-top: 12px;
+    }
+
+    .topbar,
+    .panel-header,
+    .page-header,
+    .entity-head {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .nav {
+        justify-content: flex-start;
+    }
+
+    .dashboard-hero,
+    .hero-card,
+    .panel,
+    .auth-panel,
+    .auth-visual,
+    .metric-card,
+    .editor-panel,
+    .editor-aside,
+    .profile-rail,
+    .board-rail {
+        padding: 20px;
+    }
+
+    .hero-title {
+        max-width: 100%;
+    }
+
+    th,
+    td {
+        padding: 11px;
+    }
+}

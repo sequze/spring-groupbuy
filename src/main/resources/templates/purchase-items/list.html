@@ -1,23 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Позиции закупки</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
-</head>
+<head th:replace="~{fragments/layout :: head('Позиции закупки')}"></head>
 <body>
 <div class="shell">
-    <header class="topbar">
-        <a class="brand" th:href="@{/workspaces}">
-            <span class="brand-mark">GB</span>
-            <span>GroupBuy</span>
-        </a>
-        <nav class="nav">
-            <a class="nav-link" th:href="@{/workspaces}">Workspaces</a>
-            <a class="nav-link" th:href="@{/orders(workspaceId=${workspaceId})}">Заказы</a>
-        </nav>
-    </header>
+    <header th:replace="~{fragments/layout :: topbar('purchase-items', ${workspaceId})}"></header>
 
     <main class="board-layout">
         <aside class="board-rail panel">
@@ -36,7 +22,7 @@
         </aside>
 
         <section class="page-shell">
-            <div class="message" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <th:block th:replace="~{fragments/messages :: flash(${successMessage}, ${null})}"></th:block>
 
             <section class="panel">
                 <div class="panel-header">
@@ -61,7 +47,7 @@
                                     th:selected="${status == selectedStatus}">NEW</option>
                         </select>
                     </div>
-                    <div class="form-actions field-full">
+                    <div class="form-actions field-full purchase-item-filter-actions">
                         <button class="button" type="submit">Применить</button>
                         <a class="button-secondary" th:href="@{/purchase-items(workspaceId=${workspaceId})}">Сбросить</a>
                     </div>
@@ -69,53 +55,75 @@
 
                 <div class="empty-state" th:if="${#lists.isEmpty(purchaseItems)}">По выбранным фильтрам позиций нет.</div>
 
-                <div class="item-board" th:if="${!#lists.isEmpty(purchaseItems)}">
-                <article class="entity-card item-card" th:each="item : ${purchaseItems}">
-                    <div class="entity-head">
-                        <div>
-                            <h2 class="entity-title">
-                                <a th:href="@{/purchase-items/{id}(id=${item.id})}" th:text="${item.title}">Позиция</a>
-                            </h2>
-                            <p class="entity-description" th:if="${item.description}" th:text="${item.description}"></p>
-                            <a class="entity-description" th:if="${item.productUrl}" th:href="${item.productUrl}" th:text="${item.productUrl}" target="_blank" rel="noopener noreferrer"></a>
+                <div class="item-board purchase-item-list" th:if="${!#lists.isEmpty(purchaseItems)}">
+                    <article class="entity-card item-card purchase-item-card"
+                             th:each="item : ${purchaseItems}"
+                             tabindex="0"
+                             role="link"
+                             th:onclick="|window.location.href='@{/purchase-items/{id}(id=${item.id})}'|"
+                             th:onkeydown="|if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='@{/purchase-items/{id}(id=${item.id})}'; }|">
+                        <div class="entity-head">
+                            <div>
+                                <h2 class="entity-title">
+                                    <a th:href="@{/purchase-items/{id}(id=${item.id})}" th:text="${item.title}">Позиция</a>
+                                </h2>
+                                <p class="entity-description" th:if="${item.description}" th:text="${item.description}"></p>
+                                <a class="entity-description"
+                                   th:if="${item.productUrl}"
+                                   th:href="${item.productUrl}"
+                                   th:text="${item.productUrl}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   onclick="event.stopPropagation()"></a>
+                            </div>
+                            <div class="badge-row">
+                                <span class="badge" th:text="'ID ' + ${item.id}"></span>
+                                <span class="badge badge-accent" th:text="${item.status}"></span>
+                            </div>
                         </div>
-                        <div class="badge-row">
-                            <span class="badge" th:text="'ID ' + ${item.id}"></span>
-                            <span class="badge badge-accent" th:text="${item.status}"></span>
-                        </div>
-                    </div>
 
-                    <div class="data-grid">
-                        <div class="data-point">
-                            <strong>Автор</strong>
-                            <span th:text="${item.authorDisplayName}"></span>
+                        <div class="data-grid">
+                            <div class="data-point">
+                                <strong>Автор</strong>
+                                <span th:text="${item.authorDisplayName}"></span>
+                            </div>
+                            <div class="data-point">
+                                <strong>Количество</strong>
+                                <span th:text="${item.quantity} + ' ' + (${item.unit} ?: '')"></span>
+                            </div>
+                            <div class="data-point">
+                                <strong>Цена</strong>
+                                <span th:if="${item.priceAmount != null}" th:text="${item.priceAmount} + ' ' + (${item.priceCurrency} ?: '')"></span>
+                                <span th:if="${item.priceAmount == null}">Не указана</span>
+                            </div>
                         </div>
-                        <div class="data-point">
-                            <strong>Количество</strong>
-                            <span th:text="${item.quantity} + ' ' + (${item.unit} ?: '')"></span>
-                        </div>
-                        <div class="data-point">
-                            <strong>Исходная цена</strong>
-                            <span th:if="${item.priceAmount != null}" th:text="${item.priceAmount} + ' ' + (${item.priceCurrency} ?: '')"></span>
-                            <span th:if="${item.priceAmount == null}">Не указана</span>
-                        </div>
-                        <div class="data-point">
-                            <strong>Базовая цена</strong>
-                            <span th:if="${item.basePriceAmount != null}" th:text="${item.basePriceAmount} + ' ' + (${item.baseCurrency} ?: '')"></span>
-                            <span th:if="${item.basePriceAmount == null}">Не указана</span>
-                        </div>
-                    </div>
 
-                    <div class="message section-spacer" th:if="${item.rejectionReason}" th:text="${'Причина отклонения: ' + item.rejectionReason}"></div>
+                        <div class="message section-spacer" th:if="${item.rejectionReason}" th:text="${'Причина отклонения: ' + item.rejectionReason}"></div>
 
-                    <div class="card-actions">
-                        <a class="button" th:href="@{/purchase-items/{id}(id=${item.id})}">Открыть</a>
-                        <a class="button-secondary" th:if="${item.canEdit}" th:href="@{/purchase-items/{id}/edit(id=${item.id})}">Редактировать</a>
-                        <form class="ghost-form" th:if="${item.canDelete}" th:action="@{/purchase-items/{id}/delete(id=${item.id},workspaceId=${workspaceId})}" method="post">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                            <button class="button-danger" type="submit">Удалить</button>
-                        </form>
-                    </div>
+                        <div class="card-actions purchase-item-actions" onclick="event.stopPropagation()">
+                            <a class="icon-button"
+                               th:if="${item.canEdit}"
+                               th:href="@{/purchase-items/{id}/edit(id=${item.id})}"
+                               aria-label="Редактировать"
+                               title="Редактировать">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16v4Z"></path>
+                                    <path d="m13.5 6.5 4 4"></path>
+                                </svg>
+                            </a>
+                            <form class="ghost-form" th:if="${item.canDelete}" th:action="@{/purchase-items/{id}/delete(id=${item.id},workspaceId=${workspaceId})}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <button class="icon-button icon-button-danger" type="submit" aria-label="Удалить" title="Удалить">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M4 7h16"></path>
+                                        <path d="M10 11v6"></path>
+                                        <path d="M14 11v6"></path>
+                                        <path d="M6 7l1 13h10l1-13"></path>
+                                        <path d="M9 7V4h6v3"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
                     </article>
                 </div>
                 <p class="muted section-spacer">
