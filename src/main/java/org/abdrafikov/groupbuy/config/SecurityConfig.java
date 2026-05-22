@@ -35,12 +35,14 @@ public class SecurityConfig {
     ) throws Exception {
         PathPatternRequestMatcher apiRequestMatcher = PathPatternRequestMatcher.withDefaults().matcher("/api/**");
         PathPatternRequestMatcher commentsApiMatcher =
-                PathPatternRequestMatcher.withDefaults()
-                        .matcher("/api/comments{/**}");
+                PathPatternRequestMatcher.withDefaults().matcher("/api/comments");
+
+        PathPatternRequestMatcher commentsApiSubPathMatcher =
+                PathPatternRequestMatcher.withDefaults().matcher("/api/comments/**");
 
         http
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(commentsApiMatcher)
+                        .ignoringRequestMatchers(commentsApiMatcher, commentsApiSubPathMatcher)
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
