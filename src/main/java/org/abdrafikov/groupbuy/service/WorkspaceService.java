@@ -9,10 +9,12 @@ import org.abdrafikov.groupbuy.dto.WorkspaceMemberDto;
 import org.abdrafikov.groupbuy.dto.WorkspaceMemberRoleForm;
 import org.abdrafikov.groupbuy.exception.AccessDeniedException;
 import org.abdrafikov.groupbuy.exception.ResourceNotFoundException;
+import org.abdrafikov.groupbuy.mapper.WorkspaceMapper;
 import org.abdrafikov.groupbuy.model.User;
 import org.abdrafikov.groupbuy.model.Workspace;
 import org.abdrafikov.groupbuy.model.WorkspaceMember;
 import org.abdrafikov.groupbuy.model.choices.GlobalRoleName;
+import org.abdrafikov.groupbuy.model.choices.PurchaseItemStatus;
 import org.abdrafikov.groupbuy.model.choices.WorkspaceRole;
 import org.abdrafikov.groupbuy.repository.UserRepository;
 import org.abdrafikov.groupbuy.repository.WorkspaceMemberRepository;
@@ -20,7 +22,9 @@ import org.abdrafikov.groupbuy.repository.WorkspaceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -32,12 +36,19 @@ public class WorkspaceService {
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
+    private final WorkspaceMapper workspaceMapper;
 
     @Transactional(readOnly = true)
     public List<WorkspaceDto> getAllForCurrentUser() {
         Long currentUserId = currentUserService.getCurrentUserId();
+        Set<Long> workspacesWithApprovedItems = new HashSet<>(
+                workspaceRepository.findWorkspaceIdsWithPurchaseItemStatusForMember(
+                        currentUserId,
+                        PurchaseItemStatus.APPROVED
+                )
+        );
         return workspaceRepository.findDistinctByMembersUserIdOrderByCreatedAtDesc(currentUserId).stream()
-                .map(workspace -> toDto(workspace, currentUserId))
+                .map(workspace -> toDto(workspace, currentUserId, workspacesWithApprovedItems))
                 .toList();
     }
 
@@ -274,23 +285,22 @@ public class WorkspaceService {
     }
 
     private WorkspaceDto toDto(Workspace workspace, Long currentUserId) {
+        return toDto(workspace, currentUserId, Set.of());
+    }
+
+    private WorkspaceDto toDto(Workspace workspace, Long currentUserId, Set<Long> workspacesWithApprovedItems) {
         boolean isOwner = workspace.getOwner().getId().equals(currentUserId);
-        return WorkspaceDto.builder()
-                .id(workspace.getId())
-                .name(workspace.getName())
-                .description(workspace.getDescription())
-                .ownerDisplayName(workspace.getOwner().getDisplayName())
-                .joinToken(workspace.getJoinToken())
-                .active(workspace.isActive())
-                .currentUserOwner(isOwner)
-                .currentUserAdmin(isOwner || isWorkspaceAdmin(workspace.getId(), currentUserId))
-                .canLeave(!isOwner)
-                .build();
+        return workspaceMapper.toDto(
+                workspace,
+                isOwner,
+                isOwner || isWorkspaceAdmin(workspace.getId(), currentUserId),
+                !isOwner,
+                workspacesWithApprovedItems.contains(workspace.getId())
+        );
     }
 
     private WorkspaceMemberDto toMemberDto(WorkspaceMember member, Workspace workspace, Long currentUserId) {
         User user = member.getUser();
-        User invitedBy = member.getInvitedBy();
         boolean isOwner = workspace.getOwner().getId().equals(user.getId());
         boolean currentUserCanManage = isWorkspaceAdmin(workspace.getId(), currentUserId);
         boolean currentUserOwner = workspace.getOwner().getId().equals(currentUserId);
@@ -298,26 +308,14 @@ public class WorkspaceService {
         boolean self = user.getId().equals(currentUserId);
         boolean canManageRole = currentUserCanManage && !isOwner && !protectedAdmin;
         boolean canRemove = canManageRole && !self;
-        return WorkspaceMemberDto.builder()
-                .id(member.getId())
-                .userId(user.getId())
-                .displayName(user.getDisplayName())
-                .email(user.getEmail())
-                .role(member.getRole())
-                .roleLabel(toWorkspaceRoleLabel(member.getRole()))
-                .joinedAt(member.getJoinedAt())
-                .invitedByDisplayName(invitedBy == null ? null : invitedBy.getDisplayName())
-                .owner(isOwner)
-                .canManageRole(canManageRole)
-                .canRemove(canRemove)
-                .build();
-    }
-
-    private String toWorkspaceRoleLabel(WorkspaceRole role) {
-        return switch (role) {
-            case SPACE_ADMIN -> "Админ";
-            case SPACE_MEMBER -> "Участник";
-        };
+        return workspaceMapper.toMemberDto(
+                workspace,
+                member,
+                workspaceMapper.toWorkspaceRoleLabel(member.getRole()),
+                isOwner,
+                canManageRole,
+                canRemove
+        );
     }
 
     private void applyForm(Workspace workspace, WorkspaceForm form) {

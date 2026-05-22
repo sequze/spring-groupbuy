@@ -10,7 +10,12 @@ import org.abdrafikov.groupbuy.service.currency.CurrencyConversionException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -52,12 +57,9 @@ public class PurchaseItemController {
 
     @GetMapping("/create")
     public String createPage(@RequestParam Long workspaceId, Model model) {
-        model.addAttribute("purchaseItemForm", purchaseItemService.getCreateForm(workspaceId));
-        populateForm(model);
-        model.addAttribute("canApproveImmediately", purchaseItemService.canApproveOnCreate(workspaceId));
-        model.addAttribute("formAction", "/purchase-items/create");
-        model.addAttribute("pageTitle", "Создание позиции закупки");
-        return "purchase-items/create";
+        PurchaseItemForm form = purchaseItemService.getCreateForm(workspaceId);
+        model.addAttribute("purchaseItemForm", form);
+        return renderCreateForm(model, form);
     }
 
     @PostMapping("/create")
@@ -68,22 +70,14 @@ public class PurchaseItemController {
             RedirectAttributes redirectAttributes
     ) {
         if (bindingResult.hasErrors()) {
-            populateForm(model);
-            model.addAttribute("canApproveImmediately", canApproveImmediately(form.getWorkspaceId()));
-            model.addAttribute("formAction", "/purchase-items/create");
-            model.addAttribute("pageTitle", "Создание позиции закупки");
-            return "purchase-items/create";
+            return renderCreateForm(model, form);
         }
 
         try {
             purchaseItemService.create(form);
         } catch (CurrencyConversionException ex) {
             bindingResult.rejectValue("priceCurrency", "currency.conversion", ex.getMessage());
-            populateForm(model);
-            model.addAttribute("canApproveImmediately", canApproveImmediately(form.getWorkspaceId()));
-            model.addAttribute("formAction", "/purchase-items/create");
-            model.addAttribute("pageTitle", "Создание позиции закупки");
-            return "purchase-items/create";
+            return renderCreateForm(model, form);
         }
         redirectAttributes.addFlashAttribute("successMessage", "Позиция закупки создана");
         return "redirect:/purchase-items?workspaceId=" + form.getWorkspaceId();
@@ -91,14 +85,9 @@ public class PurchaseItemController {
 
     @GetMapping("/{id}/edit")
     public String editPage(@PathVariable Long id, Model model) {
-        model.addAttribute("purchaseItemForm", purchaseItemService.getEditForm(id));
-        model.addAttribute("purchaseItem", purchaseItemService.getById(id));
-        model.addAttribute("canModerateStatus", purchaseItemService.canModerateStatus(id));
-        populateForm(model);
-        populateEditStatusOptions(model, id);
-        model.addAttribute("formAction", "/purchase-items/" + id + "/edit");
-        model.addAttribute("pageTitle", "Редактирование позиции закупки");
-        return "purchase-items/edit";
+        PurchaseItemForm form = purchaseItemService.getEditForm(id);
+        model.addAttribute("purchaseItemForm", form);
+        return renderEditForm(model, id);
     }
 
     @PostMapping("/{id}/edit")
@@ -110,26 +99,14 @@ public class PurchaseItemController {
             RedirectAttributes redirectAttributes
     ) {
         if (bindingResult.hasErrors()) {
-            model.addAttribute("purchaseItem", purchaseItemService.getById(id));
-            model.addAttribute("canModerateStatus", purchaseItemService.canModerateStatus(id));
-            populateForm(model);
-            populateEditStatusOptions(model, id);
-            model.addAttribute("formAction", "/purchase-items/" + id + "/edit");
-            model.addAttribute("pageTitle", "Редактирование позиции закупки");
-            return "purchase-items/edit";
+            return renderEditForm(model, id);
         }
 
         try {
             purchaseItemService.update(id, form);
         } catch (CurrencyConversionException ex) {
             bindingResult.rejectValue("priceCurrency", "currency.conversion", ex.getMessage());
-            model.addAttribute("purchaseItem", purchaseItemService.getById(id));
-            model.addAttribute("canModerateStatus", purchaseItemService.canModerateStatus(id));
-            populateForm(model);
-            populateEditStatusOptions(model, id);
-            model.addAttribute("formAction", "/purchase-items/" + id + "/edit");
-            model.addAttribute("pageTitle", "Редактирование позиции закупки");
-            return "purchase-items/edit";
+            return renderEditForm(model, id);
         }
         redirectAttributes.addFlashAttribute("successMessage", "Позиция закупки обновлена");
         return "redirect:/purchase-items/" + id;
@@ -161,5 +138,23 @@ public class PurchaseItemController {
 
     private boolean canApproveImmediately(Long workspaceId) {
         return workspaceId != null && purchaseItemService.canApproveOnCreate(workspaceId);
+    }
+
+    private String renderCreateForm(Model model, PurchaseItemForm form) {
+        populateForm(model);
+        model.addAttribute("canApproveImmediately", canApproveImmediately(form.getWorkspaceId()));
+        model.addAttribute("formAction", "/purchase-items/create");
+        model.addAttribute("pageTitle", "Создание позиции закупки");
+        return "purchase-items/create";
+    }
+
+    private String renderEditForm(Model model, Long id) {
+        model.addAttribute("purchaseItem", purchaseItemService.getById(id));
+        model.addAttribute("canModerateStatus", purchaseItemService.canModerateStatus(id));
+        populateForm(model);
+        populateEditStatusOptions(model, id);
+        model.addAttribute("formAction", "/purchase-items/" + id + "/edit");
+        model.addAttribute("pageTitle", "Редактирование позиции закупки");
+        return "purchase-items/edit";
     }
 }

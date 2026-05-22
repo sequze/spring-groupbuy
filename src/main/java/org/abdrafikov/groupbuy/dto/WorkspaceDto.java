@@ -16,4 +16,5 @@ public class WorkspaceDto {
     private final boolean currentUserAdmin;
     private final boolean currentUserOwner;
     private final boolean canLeave;
+    private final boolean hasApprovedPurchaseItems;
 }

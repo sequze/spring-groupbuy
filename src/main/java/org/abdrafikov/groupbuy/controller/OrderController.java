@@ -8,7 +8,12 @@ import org.abdrafikov.groupbuy.service.currency.CurrencyConversionException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -32,10 +37,7 @@ public class OrderController {
     public String createPage(@RequestParam Long workspaceId, Model model) {
         OrderForm orderForm = orderService.getCreateForm(workspaceId);
         model.addAttribute("orderForm", orderForm);
-        populateForm(model, orderForm);
-        model.addAttribute("formAction", "/orders/create");
-        model.addAttribute("pageTitle", "Создание заказа");
-        return "orders/create";
+        return renderCreateForm(model, orderForm);
     }
 
     @PostMapping("/create")
@@ -46,20 +48,14 @@ public class OrderController {
             RedirectAttributes redirectAttributes
     ) {
         if (bindingResult.hasErrors()) {
-            populateForm(model, form);
-            model.addAttribute("formAction", "/orders/create");
-            model.addAttribute("pageTitle", "Создание заказа");
-            return "orders/create";
+            return renderCreateForm(model, form);
         }
 
         try {
             orderService.create(form);
         } catch (IllegalArgumentException | CurrencyConversionException ex) {
             bindingResult.reject("orderItems", ex.getMessage());
-            populateForm(model, form);
-            model.addAttribute("formAction", "/orders/create");
-            model.addAttribute("pageTitle", "Создание заказа");
-            return "orders/create";
+            return renderCreateForm(model, form);
         }
 
         redirectAttributes.addFlashAttribute("successMessage", "Заказ создан");
@@ -70,11 +66,7 @@ public class OrderController {
     public String editPage(@PathVariable Long id, Model model) {
         OrderForm orderForm = orderService.getEditForm(id);
         model.addAttribute("orderForm", orderForm);
-        model.addAttribute("order", orderService.getById(id));
-        populateForm(model, orderForm);
-        model.addAttribute("formAction", "/orders/" + id + "/edit");
-        model.addAttribute("pageTitle", "Редактирование заказа");
-        return "orders/edit";
+        return renderEditForm(model, id, orderForm);
     }
 
     @PostMapping("/{id}/edit")
@@ -89,22 +81,14 @@ public class OrderController {
         form.setWorkspaceId(workspaceId);
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("order", orderService.getById(id));
-            populateForm(model, form);
-            model.addAttribute("formAction", "/orders/" + id + "/edit");
-            model.addAttribute("pageTitle", "Редактирование заказа");
-            return "orders/edit";
+            return renderEditForm(model, id, form);
         }
 
         try {
             orderService.update(id, form);
         } catch (IllegalArgumentException | CurrencyConversionException ex) {
             bindingResult.reject("orderItems", ex.getMessage());
-            model.addAttribute("order", orderService.getById(id));
-            populateForm(model, form);
-            model.addAttribute("formAction", "/orders/" + id + "/edit");
-            model.addAttribute("pageTitle", "Редактирование заказа");
-            return "orders/edit";
+            return renderEditForm(model, id, form);
         }
 
         redirectAttributes.addFlashAttribute("successMessage", "Заказ обновлен");
@@ -121,5 +105,20 @@ public class OrderController {
     private void populateForm(Model model, OrderForm orderForm) {
         model.addAttribute("statuses", OrderStatus.values());
         model.addAttribute("itemOptions", orderService.getItemOptions(orderForm));
+    }
+
+    private String renderCreateForm(Model model, OrderForm orderForm) {
+        populateForm(model, orderForm);
+        model.addAttribute("formAction", "/orders/create");
+        model.addAttribute("pageTitle", "Создание заказа");
+        return "orders/create";
+    }
+
+    private String renderEditForm(Model model, Long id, OrderForm orderForm) {
+        model.addAttribute("order", orderService.getById(id));
+        populateForm(model, orderForm);
+        model.addAttribute("formAction", "/orders/" + id + "/edit");
+        model.addAttribute("pageTitle", "Редактирование заказа");
+        return "orders/edit";
     }
 }
