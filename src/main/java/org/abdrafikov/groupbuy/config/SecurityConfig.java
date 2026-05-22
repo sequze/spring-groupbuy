@@ -4,6 +4,7 @@ import org.abdrafikov.groupbuy.service.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 @EnableWebSecurity
@@ -31,10 +34,13 @@ public class SecurityConfig {
             CustomUserDetailsService customUserDetailsService
     ) throws Exception {
         PathPatternRequestMatcher apiRequestMatcher = PathPatternRequestMatcher.withDefaults().matcher("/api/**");
+        PathPatternRequestMatcher commentsApiMatcher =
+                PathPatternRequestMatcher.withDefaults()
+                        .matcher("/api/comments{/**}");
 
         http
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(apiRequestMatcher)
+                        .ignoringRequestMatchers(commentsApiMatcher)
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -57,6 +63,12 @@ public class SecurityConfig {
                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
                                 apiRequestMatcher
                         )
+                        .defaultAccessDeniedHandlerFor((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpStatus.FORBIDDEN.value());
+                            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.getWriter().write("{\"message\":\"Access denied\"}");
+                        }, apiRequestMatcher)
                 )
                 .formLogin(form -> form
                         .loginPage("/auth/login")
