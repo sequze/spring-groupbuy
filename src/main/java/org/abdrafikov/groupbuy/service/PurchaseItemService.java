@@ -7,6 +7,7 @@ import org.abdrafikov.groupbuy.dto.PurchaseItemForm;
 import org.abdrafikov.groupbuy.dto.WorkspaceDto;
 import org.abdrafikov.groupbuy.exception.AccessDeniedException;
 import org.abdrafikov.groupbuy.exception.ResourceNotFoundException;
+import org.abdrafikov.groupbuy.mapper.PurchaseItemMapper;
 import org.abdrafikov.groupbuy.model.PurchaseItem;
 import org.abdrafikov.groupbuy.model.User;
 import org.abdrafikov.groupbuy.model.Workspace;
@@ -34,6 +35,7 @@ public class PurchaseItemService {
     private final WorkspaceService workspaceService;
     private final CurrentUserService currentUserService;
     private final CurrencyConversionService currencyConversionService;
+    private final PurchaseItemMapper purchaseItemMapper;
 
     @Transactional(readOnly = true)
     public List<PurchaseItemDto> getByWorkspace(Long workspaceId) {
@@ -204,26 +206,7 @@ public class PurchaseItemService {
                 item.getPriceCurrency()
         );
 
-        return PurchaseItemDto.builder()
-                .id(item.getId())
-                .workspaceId(item.getWorkspace().getId())
-                .workspaceName(item.getWorkspace().getName())
-                .authorDisplayName(item.getAuthor().getDisplayName())
-                .title(item.getTitle())
-                .description(item.getDescription())
-                .productUrl(item.getProductUrl())
-                .quantity(item.getQuantity())
-                .unit(item.getUnit())
-                .priceAmount(item.getPriceAmount())
-                .priceCurrency(item.getPriceCurrency())
-                .basePriceAmount(currentPrice.amount())
-                .baseCurrency(currentPrice.currency())
-                .status(item.getStatus())
-                .rejectionReason(item.getRejectionReason())
-                .canEdit(canEdit)
-                .canModerateStatus(canModerateStatus)
-                .canDelete(canEdit)
-                .build();
+        return purchaseItemMapper.toDto(item, canEdit, canModerateStatus, currentPrice);
     }
 
     private CurrencyConversionResult getCurrentBasePrice(BigDecimal amount, String currency) {

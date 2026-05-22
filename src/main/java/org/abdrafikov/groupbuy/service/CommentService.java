@@ -6,6 +6,7 @@ import org.abdrafikov.groupbuy.dto.CommentForm;
 import org.abdrafikov.groupbuy.dto.PurchaseItemDto;
 import org.abdrafikov.groupbuy.exception.AccessDeniedException;
 import org.abdrafikov.groupbuy.exception.ResourceNotFoundException;
+import org.abdrafikov.groupbuy.mapper.CommentMapper;
 import org.abdrafikov.groupbuy.model.Comment;
 import org.abdrafikov.groupbuy.model.PurchaseItem;
 import org.abdrafikov.groupbuy.model.User;
@@ -25,6 +26,7 @@ public class CommentService {
     private final PurchaseItemService purchaseItemService;
     private final CurrentUserService currentUserService;
     private final WorkspaceService workspaceService;
+    private final CommentMapper commentMapper;
 
     @Transactional(readOnly = true)
     public List<CommentDto> getAllAccessible() {
@@ -179,17 +181,6 @@ public class CommentService {
                 || workspaceService.isWorkspaceAdmin(comment.getPurchaseItem().getWorkspace().getId(), currentUserId)
                 || workspaceService.isGlobalAdmin();
 
-        return CommentDto.builder()
-                .id(comment.getId())
-                .purchaseItemId(comment.getPurchaseItem().getId())
-                .purchaseItemTitle(comment.getPurchaseItem().getTitle())
-                .authorId(comment.getAuthor().getId())
-                .authorDisplayName(comment.getAuthor().getDisplayName())
-                .content(comment.getContent())
-                .createdAt(comment.getCreatedAt())
-                .edited(comment.isEdited())
-                .canEdit(canManage)
-                .canDelete(canManage)
-                .build();
+        return commentMapper.toDto(comment, canManage);
     }
 }

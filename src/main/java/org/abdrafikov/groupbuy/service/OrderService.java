@@ -8,6 +8,7 @@ import org.abdrafikov.groupbuy.dto.OrderItemForm;
 import org.abdrafikov.groupbuy.dto.OrderItemOptionDto;
 import org.abdrafikov.groupbuy.exception.AccessDeniedException;
 import org.abdrafikov.groupbuy.exception.ResourceNotFoundException;
+import org.abdrafikov.groupbuy.mapper.OrderMapper;
 import org.abdrafikov.groupbuy.model.Order;
 import org.abdrafikov.groupbuy.model.OrderItem;
 import org.abdrafikov.groupbuy.model.PurchaseItem;
@@ -42,6 +43,7 @@ public class OrderService {
     private final WorkspaceService workspaceService;
     private final CurrentUserService currentUserService;
     private final CurrencyConversionService currencyConversionService;
+    private final OrderMapper orderMapper;
 
     public OrderService(
             OrderRepository orderRepository,
@@ -49,7 +51,8 @@ public class OrderService {
             UserRepository userRepository,
             WorkspaceService workspaceService,
             CurrentUserService currentUserService,
-            CurrencyConversionService currencyConversionService
+            CurrencyConversionService currencyConversionService,
+            OrderMapper orderMapper
     ) {
         this.orderRepository = orderRepository;
         this.purchaseItemRepository = purchaseItemRepository;
@@ -57,6 +60,7 @@ public class OrderService {
         this.workspaceService = workspaceService;
         this.currentUserService = currentUserService;
         this.currencyConversionService = currencyConversionService;
+        this.orderMapper = orderMapper;
     }
 
     @Transactional(readOnly = true)
@@ -215,23 +219,7 @@ public class OrderService {
                 ? getOptionalCurrentPrice(order.getTotalAmount(), snapshotCurrency)
                 : new CurrencyConversionResult(null, null);
 
-        return OrderDto.builder()
-                .id(order.getId())
-                .workspaceId(order.getWorkspace().getId())
-                .workspaceName(order.getWorkspace().getName())
-                .createdByDisplayName(order.getCreatedBy().getDisplayName())
-                .title(order.getTitle())
-                .description(order.getDescription())
-                .status(order.getStatus())
-                .totalAmount(order.getTotalAmount())
-                .currency(snapshotCurrency)
-                .currentTotalAmount(currentTotal.amount())
-                .currentCurrency(currentTotal.currency())
-                .itemCount(items.size())
-                .items(items)
-                .canEdit(canManage)
-                .canDelete(canManage)
-                .build();
+        return orderMapper.toDto(order, items, canManage, snapshotCurrency, currentTotal);
     }
 
     private OrderItemDto toOrderItemDto(OrderItem item, boolean showCurrentPrice) {
@@ -245,18 +233,7 @@ public class OrderService {
                 ? null
                 : currentPrice.amount().multiply(BigDecimal.valueOf(item.getQuantitySnapshot()));
 
-        return OrderItemDto.builder()
-                .purchaseItemId(item.getPurchaseItem().getId())
-                .title(item.getItemTitleSnapshot())
-                .quantity(item.getQuantitySnapshot())
-                .unit(item.getPurchaseItem().getUnit())
-                .price(item.getPriceSnapshot())
-                .currency(item.getCurrencySnapshot())
-                .subtotal(subtotal)
-                .currentPrice(currentPrice.amount())
-                .currentCurrency(currentPrice.currency())
-                .currentSubtotal(currentSubtotal)
-                .build();
+        return orderMapper.toItemDto(item, subtotal, currentPrice, currentSubtotal);
     }
 
     private CurrencyConversionResult getOptionalCurrentPrice(BigDecimal amount, String currency) {
@@ -283,12 +260,7 @@ public class OrderService {
     }
 
     private OrderItemOptionDto toOptionDto(PurchaseItem purchaseItem) {
-        return OrderItemOptionDto.builder()
-                .purchaseItemId(purchaseItem.getId())
-                .title(purchaseItem.getTitle())
-                .unit(purchaseItem.getUnit())
-                .priceLabel(formatPriceLabel(purchaseItem))
-                .build();
+        return orderMapper.toOptionDto(purchaseItem, formatPriceLabel(purchaseItem));
     }
 
     private String formatPriceLabel(PurchaseItem purchaseItem) {
