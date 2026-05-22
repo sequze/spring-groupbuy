@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="001-create-roles" author="amir">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="roles"/>
+            </not>
+        </preConditions>
+        <createTable tableName="roles">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_roles" nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="name" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_roles_name"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="002-create-users" author="amir">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="users"/>
+            </not>
+        </preConditions>
+        <createTable tableName="users">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_users" nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_users_email"/>
+            </column>
+            <column name="password_hash" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="display_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="003-create-user-roles" author="amir">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="user_roles"/>
+            </not>
+        </preConditions>
+        <createTable tableName="user_roles">
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="user_roles" columnNames="user_id, role_id" constraintName="pk_user_roles"/>
+    </changeSet>
+
+    <changeSet id="004-create-workspaces" author="amir">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="workspaces"/>
+            </not>
+        </preConditions>
+        <createTable tableName="workspaces">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_workspaces" nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(1000)"/>
+            <column name="owner_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="join_token" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_workspaces_join_token"/>
+            </column>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="005-create-workspace-members" author="amir">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="workspace_members"/>
+            </not>
+        </preConditions>
+        <createTable tableName="workspace_members">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_workspace_members" nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="workspace_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="joined_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="invited_by_id" type="BIGINT"/>
+        </createTable>
+        <addUniqueConstraint tableName="workspace_members"
+                             columnNames="workspace_id, user_id"
+                             constraintName="uk_workspace_member_workspace_user"/>
+    </changeSet>
+
+    <changeSet id="006-create-purchase-items" author="amir">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="purchase_items"/>
+            </not>
+        </preConditions>
+        <createTable tableName="purchase_items">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_purchase_items" nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="workspace_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="author_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="product_url" type="VARCHAR(1000)"/>
+            <column name="quantity" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unit" type="VARCHAR(50)"/>
+            <column name="price_amount" type="DECIMAL(12,2)"/>
+            <column name="price_currency" type="VARCHAR(3)"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rejection_reason" type="VARCHAR(1000)"/>
+            <column name="approved_at" type="TIMESTAMP"/>
+            <column name="approved_by_id" type="BIGINT"/>
+            <column name="rejected_at" type="TIMESTAMP"/>
+            <column name="rejected_by_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="007-create-comments" author="amir">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="comments"/>
+            </not>
+        </preConditions>
+        <createTable tableName="comments">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_comments" nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="purchase_item_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="author_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_edited" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="008-create-orders" author="amir">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="orders"/>
+            </not>
+        </preConditions>
+        <createTable tableName="orders">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_orders" nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="workspace_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(1000)"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_amount" type="DECIMAL(14,2)"/>
+            <column name="base_currency" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="submitted_at" type="TIMESTAMP"/>
+            <column name="closed_at" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="009-create-order-items" author="amir">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="order_items"/>
+            </not>
+        </preConditions>
+        <createTable tableName="order_items">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_order_items" nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="order_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="purchase_item_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="item_title_snapshot" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity_snapshot" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price_snapshot" type="DECIMAL(12,2)"/>
+            <column name="currency_snapshot" type="VARCHAR(3)"/>
+        </createTable>
+        <addUniqueConstraint tableName="order_items"
+                             columnNames="order_id, purchase_item_id"
+                             constraintName="uk_order_item_order_purchase_item"/>
+    </changeSet>
+
+    <changeSet id="010-create-currency-rates" author="amir">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="currency_rates"/>
+            </not>
+        </preConditions>
+        <createTable tableName="currency_rates">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_currency_rates" nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="base_currency" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency_code" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rate_from_base" type="DECIMAL(20,10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fetched_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="currency_rates"
+                             columnNames="base_currency, currency_code"
+                             constraintName="uk_currency_rate_base_currency_code"/>
+    </changeSet>
+
+    <changeSet id="011-add-foreign-keys" author="amir">
+        <addForeignKeyConstraint baseTableName="user_roles" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_user_roles_user"/>
+        <addForeignKeyConstraint baseTableName="user_roles" baseColumnNames="role_id"
+                                 referencedTableName="roles" referencedColumnNames="id"
+                                 constraintName="fk_user_roles_role"/>
+        <addForeignKeyConstraint baseTableName="workspaces" baseColumnNames="owner_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_workspaces_owner"/>
+        <addForeignKeyConstraint baseTableName="workspace_members" baseColumnNames="workspace_id"
+                                 referencedTableName="workspaces" referencedColumnNames="id"
+                                 constraintName="fk_workspace_members_workspace"/>
+        <addForeignKeyConstraint baseTableName="workspace_members" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_workspace_members_user"/>
+        <addForeignKeyConstraint baseTableName="workspace_members" baseColumnNames="invited_by_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_workspace_members_invited_by"/>
+        <addForeignKeyConstraint baseTableName="purchase_items" baseColumnNames="workspace_id"
+                                 referencedTableName="workspaces" referencedColumnNames="id"
+                                 constraintName="fk_purchase_items_workspace"/>
+        <addForeignKeyConstraint baseTableName="purchase_items" baseColumnNames="author_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_purchase_items_author"/>
+        <addForeignKeyConstraint baseTableName="purchase_items" baseColumnNames="approved_by_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_purchase_items_approved_by"/>
+        <addForeignKeyConstraint baseTableName="purchase_items" baseColumnNames="rejected_by_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_purchase_items_rejected_by"/>
+        <addForeignKeyConstraint baseTableName="comments" baseColumnNames="purchase_item_id"
+                                 referencedTableName="purchase_items" referencedColumnNames="id"
+                                 constraintName="fk_comments_purchase_item"/>
+        <addForeignKeyConstraint baseTableName="comments" baseColumnNames="author_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_comments_author"/>
+        <addForeignKeyConstraint baseTableName="orders" baseColumnNames="workspace_id"
+                                 referencedTableName="workspaces" referencedColumnNames="id"
+                                 constraintName="fk_orders_workspace"/>
+        <addForeignKeyConstraint baseTableName="orders" baseColumnNames="created_by_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_orders_created_by"/>
+        <addForeignKeyConstraint baseTableName="order_items" baseColumnNames="order_id"
+                                 referencedTableName="orders" referencedColumnNames="id"
+                                 constraintName="fk_order_items_order"/>
+        <addForeignKeyConstraint baseTableName="order_items" baseColumnNames="purchase_item_id"
+                                 referencedTableName="purchase_items" referencedColumnNames="id"
+                                 constraintName="fk_order_items_purchase_item"/>
+    </changeSet>
+
+    <changeSet id="012-seed-user-role" author="amir">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">select count(*) from roles where name = 'ROLE_USER'</sqlCheck>
+        </preConditions>
+        <insert tableName="roles">
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="name" value="ROLE_USER"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="013-seed-admin-role" author="amir">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">select count(*) from roles where name = 'ROLE_ADMIN'</sqlCheck>
+        </preConditions>
+        <insert tableName="roles">
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="name" value="ROLE_ADMIN"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
