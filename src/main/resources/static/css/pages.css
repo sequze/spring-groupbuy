@@ -122,11 +122,38 @@
     align-items: center;
 }
 
+.workspace-card-head {
+    align-items: flex-start;
+}
+
+.workspace-card-main {
+    min-width: 0;
+}
+
+.workspace-card-badges {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.workspace-card-badges .badge-row {
+    justify-content: flex-end;
+}
+
 .workspace-card-icon-actions {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-left: auto;
+}
+
+.workspace-approved-badge {
+    min-width: 32px;
+    justify-content: center;
+    padding-inline: 0;
+    font-size: 1rem;
+    line-height: 1;
 }
 
 .profile-layout {

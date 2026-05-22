@@ -60,15 +60,21 @@
                          role="link"
                          th:onclick="|window.location.href='@{/workspaces/{id}(id=${workspace.id})}'|"
                          th:onkeydown="|if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='@{/workspaces/{id}(id=${workspace.id})}'; }|">
-                    <div class="entity-head">
-                        <div>
+                    <div class="entity-head workspace-card-head">
+                        <div class="workspace-card-main">
                             <h3 class="entity-title" th:text="${workspace.name}">Workspace</h3>
                             <p class="entity-description" th:if="${workspace.description}" th:text="${workspace.description}"></p>
                         </div>
-                        <div class="badge-row">
-                            <span class="badge" th:text="'ID ' + ${workspace.id}">ID</span>
-                            <span class="badge badge-success" th:if="${workspace.active}">Активен</span>
-                            <span class="badge badge-warning" th:if="${!workspace.active}">Отключен</span>
+                        <div class="workspace-card-badges">
+                            <div class="badge-row">
+                                <span class="badge" th:text="'ID ' + ${workspace.id}">ID</span>
+                                <span class="badge badge-success" th:if="${workspace.active}">Активен</span>
+                                <span class="badge badge-warning" th:if="${!workspace.active}">Отключен</span>
+                            </div>
+                            <span class="badge badge-accent workspace-approved-badge"
+                                  th:if="${workspace.hasApprovedPurchaseItems}"
+                                  aria-label="Есть approved позиции"
+                                  title="Есть approved позиции">✓</span>
                         </div>
                     </div>
 
